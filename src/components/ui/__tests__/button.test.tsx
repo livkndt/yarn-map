@@ -40,4 +40,16 @@ describe('Button component', () => {
     const button = container.querySelector('button');
     expect(button).toHaveClass('h-11');
   });
+
+  it('should render as child when asChild is true', () => {
+    render(
+      <Button asChild>
+        <a href="/test">Link Button</a>
+      </Button>,
+    );
+
+    const link = screen.getByRole('link', { name: /link button/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/test');
+  });
 });

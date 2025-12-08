@@ -1,1 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
 npx lint-staged
+
+# Run tests with coverage and fail if below threshold
+npm run test:coverage

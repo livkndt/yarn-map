@@ -13,12 +13,21 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
+  transformIgnorePatterns: ['node_modules/(?!(next-auth|@auth)/)'],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
     '!src/**/__tests__/**',
   ],
+  coverageThreshold: {
+    global: {
+      branches: 60,
+      functions: 75,
+      lines: 85,
+      statements: 85,
+    },
+  },
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
