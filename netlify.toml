@@ -10,8 +10,16 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# Prisma Postgres extension
+# Make sure this is configured in Netlify dashboard:
+# 1. Go to your site → Extensions → Prisma Postgres
+# 2. Link your Prisma project
+# 3. Configure for Production and Preview environments
+[[plugins]]
+  package = "prisma-postgres"
+
 # Note: Environment variables should be set in Netlify dashboard:
-# - DATABASE_URL: Your PostgreSQL connection string
+# - DATABASE_URL: Auto-set by Prisma Postgres extension (or set manually)
 # - NEXTAUTH_SECRET: Generate with: openssl rand -base64 32
 # - NEXTAUTH_URL: Your Netlify deployment URL (e.g., https://your-app.netlify.app)
 # - ADMIN_PASSWORD: Your admin password
