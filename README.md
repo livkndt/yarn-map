@@ -1,6 +1,6 @@
 # Yarn Map
 
-A full-stack Next.js 14 web application for discovering fiber arts events and yarn shops across the UK.
+A full-stack Next.js 16 web application for discovering fiber arts events and yarn shops across the UK.
 
 ## Overview
 
@@ -9,17 +9,19 @@ Yarn Map is a directory platform that helps users find:
 - **Events**: Knitting circles, crochet workshops, yarn festivals, and fiber arts events
 - **Shops**: Independent yarn shops with locations, contact information, and specialties
 
-The platform features a clean, modern UI with a warm aesthetic, built with Next.js 14 App Router, TypeScript, Tailwind CSS, and shadcn/ui components.
+The platform features a clean, modern UI with a warm aesthetic, built with Next.js 16 App Router, React 19, TypeScript, Tailwind CSS, and shadcn/ui components.
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 16 (App Router)
+- **React**: React 19.2.1
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS
 - **UI Components**: shadcn/ui
 - **Database**: Vercel Postgres with Prisma ORM
 - **Authentication**: NextAuth.js v5
 - **Code Quality**: ESLint + Prettier
+- **Testing**: Jest + React Testing Library
 
 ## Prerequisites
 
@@ -140,6 +142,9 @@ src/
 - `npm run lint` - Run ESLint
 - `npm run lint:fix` - Fix ESLint errors
 - `npm run format` - Format code with Prettier
+- `npm test` - Run tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Run tests with coverage report
 - `npm run db:generate` - Generate Prisma Client
 - `npm run db:migrate` - Run database migrations
 - `npm run db:studio` - Open Prisma Studio
@@ -244,6 +249,27 @@ The project is configured for Vercel deployment. The build command is automatica
 - **Styling**: Use Tailwind CSS utility classes. Follow the design system defined in `tailwind.config.ts`
 - **Code Formatting**: Run `npm run format` before committing
 - **Linting**: Fix all ESLint errors before committing
+- **Testing**: Write tests for new components and features. Maintain test coverage above 85%
+- **Commits**: Follow Conventional Commits format (e.g., `feat: add new feature`, `fix: resolve bug`)
+
+## Testing
+
+The project uses Jest and React Testing Library for testing. Test coverage thresholds are enforced:
+
+- **Statements**: 85%
+- **Branches**: 60%
+- **Functions**: 75%
+- **Lines**: 85%
+
+Tests run automatically on commit via pre-commit hooks. If coverage drops below thresholds, the commit will fail.
+
+To run tests:
+
+```bash
+npm test              # Run all tests
+npm run test:watch    # Run tests in watch mode
+npm run test:coverage # Run tests with coverage report
+```
 
 ## Design System
 
@@ -270,8 +296,16 @@ The project is configured for Vercel deployment. The build command is automatica
 1. Create a feature branch
 2. Make your changes
 3. Run `npm run lint` and `npm run format`
-4. Test your changes locally
-5. Submit a pull request
+4. Write tests for new features
+5. Run `npm test` to ensure all tests pass
+6. Run `npm run test:coverage` to verify coverage thresholds are met
+7. Submit a pull request
+
+**Note**: Pre-commit hooks will automatically:
+
+- Lint and format staged files
+- Run tests with coverage
+- Validate commit message format (Conventional Commits)
 
 ## License
 
