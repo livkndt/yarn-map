@@ -206,41 +206,187 @@ The admin section is protected with NextAuth.js v5 using a credentials provider.
 
 ## Deployment
 
-### Deploying to Vercel
+### Deploying to Netlify
 
-1. **Push your code to GitHub**
+#### Step 1: Push your code to GitHub
 
-2. **Import your project to Vercel**
-   - Go to [vercel.com](https://vercel.com)
-   - Click "New Project"
-   - Import your GitHub repository
+Make sure your code is pushed to a GitHub repository.
 
-3. **Set up Vercel Postgres**
-   - In your Vercel project dashboard, go to the "Storage" tab
-   - Create a new Postgres database
-   - The connection string will be automatically added to your environment variables
+#### Step 2: Import your project to Netlify
 
-4. **Configure Environment Variables**
-   - In your Vercel project settings, add all environment variables from `.env.example`
-   - Generate a secure `NEXTAUTH_SECRET`:
+1. Go to [netlify.com](https://netlify.com) and sign in
+2. Click **"Add new site"** → **"Import an existing project"**
+3. Connect to your Git provider (GitHub, GitLab, or Bitbucket)
+4. Select your repository
+5. Netlify will detect it's a Next.js project automatically
+
+#### Step 3: Set up your PostgreSQL Database
+
+**Recommended: Use Netlify's Prisma Postgres Integration** (Easiest!)
+
+This is the simplest option - Netlify automatically creates and manages your database:
+
+1. **Install Prisma Postgres Extension**:
+   - Go to https://www.netlify.com/integrations/prisma/
+   - Click **"Enable integration"** to add it to your Netlify team
+
+2. **Connect Netlify to Prisma**:
+   - Go to https://www.prisma.io/console and sign in
+   - Select your workspace (or create one)
+   - Navigate to **"Integrations"** section
+   - Create a new **Netlify integration token**
+   - Copy the generated token
+   - In Netlify: Go to **Team settings** → Find **Prisma Postgres extension** → Paste token in "Integration Token" field → Save
+
+3. **Configure for Your Site**:
+   - In your Netlify site dashboard, go to **Extensions**
+   - Click on **"Prisma Postgres"**
+   - Choose the Prisma project you want to link
+   - Configure for **Production** and **Preview** environments
+   - Save settings
+   - **Done!** The extension automatically creates a Prisma Postgres instance and sets `DATABASE_URL` for you
+
+**Alternative: External Database Providers** (if you prefer not to use Prisma Postgres):
+
+- [Supabase](https://supabase.com) (free tier available)
+- [Neon](https://neon.tech) (serverless Postgres, free tier available)
+- [Railway](https://railway.app) (free tier available)
+- [Render](https://render.com) (free tier available)
+
+If using an external provider, you'll receive a connection string in the format:
+
+```
+postgresql://user:password@host:port/database?sslmode=require
+```
+
+#### Step 4: Configure Environment Variables
+
+Go to your Netlify site **Site settings** → **Environment variables** and add:
+
+1. **`DATABASE_URL`**
+   - **If using Prisma Postgres extension**: This is automatically set - you don't need to add it manually!
+   - **If using external provider**: Your PostgreSQL connection string from Step 3
+   - Format: `postgresql://user:password@host:port/database?sslmode=require`
+   - Make sure to add it for **Production**, **Deploy previews**, and **Branch deploys** (only if using external provider)
+
+2. **`NEXTAUTH_SECRET`** (or `AUTH_SECRET` for NextAuth v5)
+   - Generate a secure secret:
      ```bash
      openssl rand -base64 32
      ```
-   - Set `NEXTAUTH_URL` to your Vercel deployment URL (e.g., `https://your-app.vercel.app`)
+   - Copy the output and paste it as the value
+   - Add it for all scopes (Production, Deploy previews, Branch deploys)
 
-5. **Run Database Migrations**
-   - After deployment, run migrations using Vercel CLI or add a build script:
-     ```bash
-     vercel env pull .env.local
-     npx prisma migrate deploy
-     ```
+3. **`NEXTAUTH_URL`** (or `AUTH_URL` for NextAuth v5)
+   - For Production: `https://your-app.netlify.app` (or your custom domain)
+   - For Deploy previews: Leave empty or use `https://deploy-preview-XXX--your-app.netlify.app`
+   - For Branch deploys: Leave empty or use `https://branch-name--your-app.netlify.app`
+   - For Local development: `http://localhost:3000`
 
-6. **Deploy**
-   - Vercel will automatically deploy on every push to your main branch
+4. **`ADMIN_PASSWORD`**
+   - Set a secure password for admin login
+   - This is the password you'll use to access `/admin`
+   - Add it for all scopes
+
+#### Step 5: Configure Build Settings
+
+The `netlify.toml` file is already configured, but verify these settings in Netlify:
+
+1. Go to **Site settings** → **Build & deploy**
+2. Verify:
+   - **Build command**: `npm run build` (or leave empty to use netlify.toml)
+   - **Publish directory**: `.next` (Netlify Next.js plugin handles this automatically)
+   - **Node version**: `20` (set in netlify.toml)
+
+#### Step 6: Database Migrations
+
+The build script automatically runs migrations during deployment:
+
+- `prisma generate` - Generates Prisma Client (runs in postinstall)
+- `prisma migrate deploy` - Applies pending migrations
+- `next build` - Builds your Next.js app
+
+**First deployment**: After your first deployment:
+
+1. Check the build logs in Netlify dashboard
+2. Look for "Applying migration..." messages
+3. If migrations fail, you can run them manually:
+
+   ```bash
+   # Install Netlify CLI
+   npm install -g netlify-cli
+
+   # Login to Netlify
+   netlify login
+
+   # Pull environment variables
+   netlify env:pull .env.local
+
+   # Run migrations
+   npx prisma migrate deploy
+   ```
+
+#### Step 7: Deploy
+
+1. Click **"Deploy site"** in Netlify
+2. Netlify will automatically:
+   - Install dependencies
+   - Generate Prisma Client (via postinstall script)
+   - Run database migrations (via build script)
+   - Build your Next.js app
+   - Deploy to production
+
+3. **Future deployments**: Netlify will automatically deploy on every push to your main branch
+
+#### Step 8: Verify Deployment
+
+1. Visit your deployment URL (e.g., `https://your-app.netlify.app`)
+2. Test the admin login at `https://your-app.netlify.app/admin`
+3. Check that database connections are working
 
 ### Build Configuration
 
-The project is configured for Vercel deployment. The build command is automatically set to `next build`, and the output directory is `.next`.
+The project is configured for Netlify deployment via `netlify.toml`:
+
+- **Build Command**: `npm run build` (which runs `prisma generate && prisma migrate deploy && next build`)
+- **Publish Directory**: `.next` (handled by `@netlify/plugin-nextjs`)
+- **Node Version**: `20`
+- **Plugins**: `@netlify/plugin-nextjs` (automatically installed)
+
+### Troubleshooting
+
+**Database connection issues:**
+
+- Verify `DATABASE_URL` is set correctly in Environment Variables
+- Check that your database is accessible from the internet (not localhost)
+- Ensure SSL mode is enabled (`?sslmode=require` in connection string)
+- Check database provider's firewall/whitelist settings
+
+**Build failures:**
+
+- Check build logs for specific errors
+- Verify Node version is 20
+- Ensure all environment variables are set
+- Check that Prisma migrations are valid
+
+**Authentication issues:**
+
+- Verify `NEXTAUTH_SECRET` (or `AUTH_SECRET`) is set
+- Check that `NEXTAUTH_URL` matches your deployment URL exactly
+- Ensure `ADMIN_PASSWORD` is set
+
+**Migration issues:**
+
+- Check build logs for migration errors
+- Run migrations manually: `npx prisma migrate deploy`
+- Verify your Prisma schema is correct
+- Ensure database user has migration permissions
+
+**Next.js plugin issues:**
+
+- The `@netlify/plugin-nextjs` plugin should be automatically detected
+- If not, it will be installed during the first build
+- Check that `netlify.toml` is in your repository root
 
 ## Development Guidelines
 

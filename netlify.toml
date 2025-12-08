@@ -1,0 +1,17 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Next.js configuration - Netlify's official Next.js plugin
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Note: Environment variables should be set in Netlify dashboard:
+# - DATABASE_URL: Your PostgreSQL connection string
+# - NEXTAUTH_SECRET: Generate with: openssl rand -base64 32
+# - NEXTAUTH_URL: Your Netlify deployment URL (e.g., https://your-app.netlify.app)
+# - ADMIN_PASSWORD: Your admin password
