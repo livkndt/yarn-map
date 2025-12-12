@@ -1,12 +1,17 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { cn } from '@/lib/utils';
 
 export function Nav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (path: string) => pathname === path;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -22,13 +27,19 @@ export function Nav() {
           <div className="hidden md:flex md:items-center md:space-x-6">
             <Link
               href="/events"
-              className="text-sm font-medium text-foreground transition-colors hover:text-primary"
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-primary',
+                isActive('/events') ? 'text-primary' : 'text-foreground',
+              )}
             >
               Events
             </Link>
             <Link
               href="/shops"
-              className="text-sm font-medium text-foreground transition-colors hover:text-primary"
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-primary',
+                isActive('/shops') ? 'text-primary' : 'text-foreground',
+              )}
             >
               Shops
             </Link>
@@ -56,14 +67,24 @@ export function Nav() {
             <div className="space-y-1 px-2 pb-3 pt-2">
               <Link
                 href="/events"
-                className="block rounded-lg px-3 py-2 text-base font-medium text-foreground hover:bg-accent"
+                className={cn(
+                  'block rounded-lg px-3 py-2 text-base font-medium transition-colors hover:bg-accent',
+                  isActive('/events')
+                    ? 'bg-accent text-primary'
+                    : 'text-foreground',
+                )}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Events
               </Link>
               <Link
                 href="/shops"
-                className="block rounded-lg px-3 py-2 text-base font-medium text-foreground hover:bg-accent"
+                className={cn(
+                  'block rounded-lg px-3 py-2 text-base font-medium transition-colors hover:bg-accent',
+                  isActive('/shops')
+                    ? 'bg-accent text-primary'
+                    : 'text-foreground',
+                )}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Shops

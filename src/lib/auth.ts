@@ -5,6 +5,7 @@ import { db } from './db';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
+  trustHost: true, // Required for production deployments on Netlify/Vercel
   session: {
     strategy: 'jwt',
   },

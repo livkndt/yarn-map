@@ -1,0 +1,116 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { auth } from '@/lib/auth';
+import { z } from 'zod';
+
+const createShopSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
+  address: z.string().min(1, 'Address is required'),
+  city: z.string().min(1, 'City is required'),
+  postcode: z
+    .string()
+    .regex(
+      /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i,
+      'Invalid UK postcode format',
+    ),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  website: z.string().url().optional().or(z.literal('')),
+  phone: z.string().optional(),
+  source: z.string().optional(),
+});
+
+// GET /api/shops - List all shops with filters
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const city = searchParams.get('city');
+    const search = searchParams.get('search');
+    const limit = parseInt(searchParams.get('limit') || '100', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
+
+    const where: any = {};
+
+    if (city) {
+      where.city = {
+        contains: city,
+        mode: 'insensitive',
+      };
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { city: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [shops, total] = await Promise.all([
+      db.shop.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        take: limit,
+        skip: offset,
+      }),
+      db.shop.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      shops,
+      total,
+      limit,
+      offset,
+    });
+  } catch (error) {
+    console.error('Error fetching shops:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch shops' },
+      { status: 500 },
+    );
+  }
+}
+
+// POST /api/shops - Create shop (admin only)
+export async function POST(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const data = createShopSchema.parse(body);
+
+    const shop = await db.shop.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        address: data.address,
+        city: data.city,
+        postcode: data.postcode.toUpperCase(),
+        latitude: data.latitude,
+        longitude: data.longitude,
+        website: data.website || null,
+        phone: data.phone,
+        source: data.source,
+      },
+    });
+
+    return NextResponse.json(shop, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation error', details: error.errors },
+        { status: 400 },
+      );
+    }
+    console.error('Error creating shop:', error);
+    return NextResponse.json(
+      { error: 'Failed to create shop' },
+      { status: 500 },
+    );
+  }
+}

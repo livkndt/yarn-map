@@ -24,6 +24,9 @@ model Event {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  @@index([startDate])
+  @@index([location])
+  @@index([createdAt])
   @@map("events")
 }
 
@@ -42,6 +45,9 @@ model Shop {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  @@index([city])
+  @@index([postcode])
+  @@index([createdAt])
   @@map("shops")
 }
 
@@ -55,6 +61,8 @@ model Report {
   status        String   @default("pending")
   createdAt     DateTime @default(now()) @map("created_at")
 
+  @@index([status])
+  @@index([createdAt])
   @@map("reports")
 }
 

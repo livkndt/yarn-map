@@ -8,7 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Database, FileText } from 'lucide-react';
+import Link from 'next/link';
+import { Calendar, MapPin, FileText, Flag } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
   const session = await auth();
@@ -41,20 +42,18 @@ export default async function AdminDashboardPage() {
         </form>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
             <div className="flex items-center space-x-2">
-              <Database className="h-5 w-5 text-primary" />
-              <CardTitle>Scrape Data</CardTitle>
+              <Calendar className="h-5 w-5 text-primary" />
+              <CardTitle>Manage Events</CardTitle>
             </div>
-            <CardDescription>
-              Import events and shops from external sources
-            </CardDescription>
+            <CardDescription>Create, edit, and delete events</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button disabled className="w-full">
-              Coming Soon
+            <Button asChild className="w-full">
+              <Link href="/admin/events">Manage Events</Link>
             </Button>
           </CardContent>
         </Card>
@@ -62,7 +61,24 @@ export default async function AdminDashboardPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center space-x-2">
-              <FileText className="h-5 w-5 text-primary" />
+              <MapPin className="h-5 w-5 text-primary" />
+              <CardTitle>Manage Shops</CardTitle>
+            </div>
+            <CardDescription>
+              Create, edit, and delete yarn shops
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full">
+              <Link href="/admin/shops">Manage Shops</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <Flag className="h-5 w-5 text-primary" />
               <CardTitle>View Reports</CardTitle>
             </div>
             <CardDescription>
@@ -70,8 +86,8 @@ export default async function AdminDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button disabled className="w-full">
-              Coming Soon
+            <Button asChild className="w-full">
+              <Link href="/admin/reports">View Reports</Link>
             </Button>
           </CardContent>
         </Card>

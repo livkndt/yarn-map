@@ -1,8 +1,25 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin } from 'lucide-react';
+import { db } from '@/lib/db';
 
-export default function HomePage() {
+async function getStats() {
+  const [upcomingEventsCount, shopsCount] = await Promise.all([
+    db.event.count({
+      where: {
+        startDate: {
+          gte: new Date(),
+        },
+      },
+    }),
+    db.shop.count(),
+  ]);
+
+  return { upcomingEventsCount, shopsCount };
+}
+
+export default async function HomePage() {
+  const { upcomingEventsCount, shopsCount } = await getStats();
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
@@ -38,7 +55,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Stats Section */}
       <section className="border-t bg-muted/30">
         <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-5xl">
@@ -52,6 +69,9 @@ export default function HomePage() {
                   Find knitting circles, crochet workshops, yarn festivals, and
                   fiber arts events happening across the UK.
                 </p>
+                <div className="mt-4 text-2xl font-bold text-primary">
+                  {upcomingEventsCount} upcoming events
+                </div>
               </div>
               <div className="bg-card rounded-lg p-6 shadow-sm">
                 <MapPin className="h-8 w-8 text-primary" />
@@ -62,6 +82,9 @@ export default function HomePage() {
                   Discover independent yarn shops, their locations, contact
                   information, and specialties.
                 </p>
+                <div className="mt-4 text-2xl font-bold text-primary">
+                  {shopsCount} yarn shops listed
+                </div>
               </div>
             </div>
           </div>

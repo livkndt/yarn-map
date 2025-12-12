@@ -11,6 +11,83 @@ Yarn Map is a directory platform that helps users find:
 
 The platform features a clean, modern UI with a warm aesthetic, built with Next.js 16 App Router, React 19, TypeScript, Tailwind CSS, and shadcn/ui components.
 
+## Features
+
+### Phase 2: Core Features
+
+#### Events Directory & Calendar
+
+- **Events Directory** (`/events`): Browse all fiber arts events with advanced filtering
+  - Filter by upcoming/past events, location/region, date range
+  - Search by name or description
+  - Grid/list view with pagination
+  - Event detail modals with full information
+  - Responsive design with mobile-friendly filters
+
+- **Calendar View** (`/events/calendar`): Month-view calendar showing events
+  - Visual calendar with events marked on dates
+  - Click dates to see events for that day
+  - Navigate between months
+  - Mobile-optimized agenda view
+
+#### Yarn Shops Directory with Map
+
+- **Shops Directory** (`/shops`): Interactive map and list of yarn shops
+  - **Map View**: React-Leaflet integration with OpenStreetMap tiles
+    - Markers for each shop with custom icons
+    - Marker clustering when zoomed out
+    - Click markers to view shop details
+    - User location support (geolocation)
+    - Fit bounds to show all shops
+  - **List View**: Sidebar with shop cards
+    - Search and filter by region/city
+    - Distance calculation from user location
+    - Scrollable list with shop details
+  - **Shop Details**: Modal with complete information
+    - Full description, address, contact info
+    - Links to website and Google Maps
+    - Report issue functionality
+
+#### Reporting System
+
+- **Report Form**: Accessible from event/shop detail pages
+  - Issue types: Incorrect information, no longer exists, duplicate, spam, other
+  - Description field with validation
+  - Optional email for follow-up
+  - Honeypot spam prevention
+  - Rate limiting (5 reports per hour per IP)
+
+- **Admin Reports Dashboard** (`/admin/reports`): Manage user reports
+  - View all reports with filters (status, entity type)
+  - Update report status (pending, reviewed, resolved)
+  - View related event/shop details
+  - Delete resolved/spam reports
+
+#### Admin Management
+
+- **Events Management** (`/admin/events`): Full CRUD for events
+  - Table view of all events
+  - Create/edit event form with validation
+  - Delete with confirmation
+  - All fields: name, description, dates, location, address, coordinates, website, source
+
+- **Shops Management** (`/admin/shops`): Full CRUD for shops
+  - Table view of all shops
+  - Create/edit shop form with validation
+  - Geocoding helper (uses Nominatim OpenStreetMap API)
+  - UK postcode validation
+  - Delete with confirmation
+  - All fields: name, description, address, city, postcode, coordinates, website, phone, source
+
+#### General Improvements
+
+- **Homepage**: Displays live stats (upcoming events count, shops count)
+- **Navigation**: Active state indicators, improved mobile menu
+- **SEO**: Proper metadata for all pages
+- **Accessibility**: Keyboard navigation, ARIA labels, focus management
+- **Performance**: Lazy loading, optimized queries, React.memo where appropriate
+- **Mobile Responsive**: Tested at multiple breakpoints (320px to 1440px)
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
@@ -20,6 +97,10 @@ The platform features a clean, modern UI with a warm aesthetic, built with Next.
 - **UI Components**: shadcn/ui
 - **Database**: Vercel Postgres with Prisma ORM
 - **Authentication**: NextAuth.js v5
+- **Maps**: React-Leaflet with OpenStreetMap
+- **Forms**: React Hook Form with Zod validation
+- **Date Handling**: date-fns
+- **Notifications**: Sonner (toast notifications)
 - **Code Quality**: ESLint + Prettier
 - **Testing**: Jest + React Testing Library
 
@@ -95,9 +176,22 @@ npm run db:migrate
 This will:
 
 - Generate the Prisma Client
-- Create the database tables (events, shops, reports)
+- Create the database tables (events, shops, reports) with indexes
 
-### 6. Start the Development Server
+### 6. Seed the Database (Optional)
+
+Populate the database with sample data for testing:
+
+```bash
+npm run db:seed
+```
+
+This creates:
+
+- 5 sample events
+- 8 sample yarn shops
+
+### 7. Start the Development Server
 
 ```bash
 npm run dev
@@ -147,7 +241,9 @@ src/
 - `npm run test:coverage` - Run tests with coverage report
 - `npm run db:generate` - Generate Prisma Client
 - `npm run db:migrate` - Run database migrations
+- `npm run db:migrate:deploy` - Deploy migrations (production)
 - `npm run db:studio` - Open Prisma Studio
+- `npm run db:seed` - Seed database with sample data
 
 ## Database Schema
 
@@ -156,15 +252,15 @@ src/
 - `id` (String, Primary Key)
 - `name` (String)
 - `description` (Text, Optional)
-- `start_date` (DateTime)
+- `start_date` (DateTime) - **Indexed**
 - `end_date` (DateTime, Optional)
-- `location` (String)
+- `location` (String) - **Indexed**
 - `address` (String)
 - `latitude` (Float, Optional)
 - `longitude` (Float, Optional)
 - `website` (String, Optional)
 - `source` (String, Optional)
-- `created_at` (DateTime)
+- `created_at` (DateTime) - **Indexed**
 - `updated_at` (DateTime)
 
 ### Shops Table
@@ -173,26 +269,26 @@ src/
 - `name` (String)
 - `description` (Text, Optional)
 - `address` (String)
-- `city` (String)
-- `postcode` (String)
+- `city` (String) - **Indexed**
+- `postcode` (String) - **Indexed**
 - `latitude` (Float, Optional)
 - `longitude` (Float, Optional)
 - `website` (String, Optional)
 - `phone` (String, Optional)
 - `source` (String, Optional)
-- `created_at` (DateTime)
+- `created_at` (DateTime) - **Indexed**
 - `updated_at` (DateTime)
 
 ### Reports Table
 
 - `id` (String, Primary Key)
-- `entity_type` (String) - 'event' or 'shop'
+- `entity_type` (String) - 'Event' or 'Shop'
 - `entity_id` (String)
-- `issue_type` (String)
+- `issue_type` (String) - 'Incorrect information', 'Event/shop no longer exists', 'Duplicate entry', 'Spam', 'Other'
 - `description` (Text, Optional)
 - `reporter_email` (String, Optional)
-- `status` (String, Default: 'pending')
-- `created_at` (DateTime)
+- `status` (String, Default: 'pending') - **Indexed** - 'pending', 'reviewed', 'resolved'
+- `created_at` (DateTime) - **Indexed**
 
 ## Authentication
 
@@ -269,19 +365,21 @@ Go to your Netlify site **Site settings** → **Environment variables** and add:
    - Format: `postgresql://user:password@host:port/database?sslmode=require`
    - Make sure to add it for **Production**, **Deploy previews**, and **Branch deploys** (only if using external provider)
 
-2. **`NEXTAUTH_SECRET`** (or `AUTH_SECRET` for NextAuth v5)
+2. **`AUTH_SECRET`** (NextAuth v5 - also accepts `NEXTAUTH_SECRET` for backwards compatibility)
    - Generate a secure secret:
      ```bash
      openssl rand -base64 32
      ```
    - Copy the output and paste it as the value
    - Add it for all scopes (Production, Deploy previews, Branch deploys)
+   - **Important**: This is required for authentication to work in production
 
-3. **`NEXTAUTH_URL`** (or `AUTH_URL` for NextAuth v5)
+3. **`AUTH_URL`** (NextAuth v5 - also accepts `NEXTAUTH_URL` for backwards compatibility)
    - For Production: `https://your-app.netlify.app` (or your custom domain)
    - For Deploy previews: Leave empty or use `https://deploy-preview-XXX--your-app.netlify.app`
    - For Branch deploys: Leave empty or use `https://branch-name--your-app.netlify.app`
    - For Local development: `http://localhost:3000`
+   - **Note**: Make sure there's no trailing slash in the URL
 
 4. **`ADMIN_PASSWORD`**
    - Set a secure password for admin login
@@ -371,9 +469,11 @@ The project is configured for Netlify deployment via `netlify.toml`:
 
 **Authentication issues:**
 
-- Verify `NEXTAUTH_SECRET` (or `AUTH_SECRET`) is set
-- Check that `NEXTAUTH_URL` matches your deployment URL exactly
+- Verify `AUTH_SECRET` (or `NEXTAUTH_SECRET`) is set in Netlify environment variables
+- Check that `AUTH_URL` (or `NEXTAUTH_URL`) matches your deployment URL exactly (no trailing slash)
 - Ensure `ADMIN_PASSWORD` is set
+- Make sure `trustHost: true` is in your NextAuth config (already added in `src/lib/auth.ts`)
+- Clear browser cookies and try again if authentication seems stuck
 
 **Migration issues:**
 
