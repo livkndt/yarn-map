@@ -70,7 +70,7 @@ describe('AdminDashboardPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('should render Scrape Data card', async () => {
+  it('should render Manage Events card', async () => {
     mockAuth.mockResolvedValue({
       user: { email: 'admin@example.com' },
     });
@@ -79,15 +79,27 @@ describe('AdminDashboardPage', () => {
     render(page);
 
     expect(
-      screen.getByRole('heading', { name: /scrape data/i }),
+      screen.getByRole('heading', { name: /manage events/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/import events and shops from external sources/i),
+      screen.getByText(/create, edit, and delete events/i),
     ).toBeInTheDocument();
-    const comingSoonButtons = screen.getAllByRole('button', {
-      name: /coming soon/i,
+  });
+
+  it('should render Manage Shops card', async () => {
+    mockAuth.mockResolvedValue({
+      user: { email: 'admin@example.com' },
     });
-    expect(comingSoonButtons.length).toBeGreaterThan(0);
+
+    const page = await AdminDashboardPage();
+    render(page);
+
+    expect(
+      screen.getByRole('heading', { name: /manage shops/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/create, edit, and delete yarn shops/i),
+    ).toBeInTheDocument();
   });
 
   it('should render View Reports card', async () => {

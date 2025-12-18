@@ -13,17 +13,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
-
-interface Report {
-  id: string;
-  entityType: string;
-  entityId: string;
-  issueType: string;
-  description: string | null;
-  reporterEmail: string | null;
-  status: string;
-  createdAt: string;
-}
+import type { Report } from '@/types';
 
 interface EntityDetails {
   name: string;
@@ -116,7 +106,7 @@ export function ReportsManagement() {
     }
   };
 
-  const handleDelete = async (reportId: string) => {
+  const handleDelete = async (_reportId: string) => {
     if (!confirm('Are you sure you want to delete this report?')) {
       return;
     }

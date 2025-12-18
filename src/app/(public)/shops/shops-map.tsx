@@ -5,23 +5,18 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import type { Shop } from '@/types';
 
-interface Shop {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  postcode: string;
+export type MapShop = Shop & {
   latitude: number;
   longitude: number;
-  website: string | null;
-}
+};
 
 interface ShopsMapProps {
-  shops: Shop[];
+  shops: MapShop[];
   highlightedShopId: string | null;
   userLocation: { lat: number; lng: number } | null;
-  onShopClick: (shop: Shop) => void;
+  onShopClick: (shop: MapShop) => void;
 }
 
 // Fix for default marker icons in Next.js
@@ -57,7 +52,7 @@ function MapController({
   shops,
   userLocation,
 }: {
-  shops: Shop[];
+  shops: MapShop[];
   userLocation: { lat: number; lng: number } | null;
 }) {
   const map = useMap();

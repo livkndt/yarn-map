@@ -23,20 +23,7 @@ import {
 } from 'date-fns';
 import { EventDetailModal } from '../event-detail-modal';
 import { ReportModal } from '@/components/report-modal';
-
-interface Event {
-  id: string;
-  name: string;
-  description: string | null;
-  startDate: string;
-  endDate: string | null;
-  location: string;
-  address: string;
-  latitude: number | null;
-  longitude: number | null;
-  website: string | null;
-  source: string | null;
-}
+import type { Event } from '@/types';
 
 export function EventsCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -183,7 +170,8 @@ export function EventsCalendar() {
                   return (
                     <div
                       key={idx}
-                      className={`min-h-[80px] border p-2 ${
+                      onClick={() => handleDateClick(day)}
+                      className={`min-h-[80px] cursor-pointer border p-2 transition-colors hover:bg-muted/50 ${
                         isCurrentMonth
                           ? 'bg-background'
                           : 'bg-muted/30 text-muted-foreground'

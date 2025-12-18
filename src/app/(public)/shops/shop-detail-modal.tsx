@@ -9,20 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-
-interface Shop {
-  id: string;
-  name: string;
-  description: string | null;
-  address: string;
-  city: string;
-  postcode: string;
-  latitude: number | null;
-  longitude: number | null;
-  website: string | null;
-  phone: string | null;
-  source: string | null;
-}
+import type { Shop } from '@/types';
 
 interface ShopDetailModalProps {
   shop: Shop;

@@ -6,20 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ShopFormModal } from './shop-form-modal';
-
-interface Shop {
-  id: string;
-  name: string;
-  description: string | null;
-  address: string;
-  city: string;
-  postcode: string;
-  latitude: number | null;
-  longitude: number | null;
-  website: string | null;
-  phone: string | null;
-  source: string | null;
-}
+import type { Shop } from '@/types';
 
 export function ShopsManagement() {
   const [shops, setShops] = useState<Shop[]>([]);

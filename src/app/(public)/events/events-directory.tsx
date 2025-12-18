@@ -16,20 +16,7 @@ import {
 import { format, parseISO } from 'date-fns';
 import { EventDetailModal } from './event-detail-modal';
 import { ReportModal } from '@/components/report-modal';
-
-interface Event {
-  id: string;
-  name: string;
-  description: string | null;
-  startDate: string;
-  endDate: string | null;
-  location: string;
-  address: string;
-  latitude: number | null;
-  longitude: number | null;
-  website: string | null;
-  source: string | null;
-}
+import type { Event } from '@/types';
 
 const UK_REGIONS = [
   'All Regions',

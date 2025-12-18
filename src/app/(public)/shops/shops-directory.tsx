@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import dynamic from 'next/dynamic';
+import type { MapShop } from './shops-map';
+import type { Shop } from '@/types';
 
 const ShopsMap = dynamic(
   () => import('./shops-map').then((mod) => ({ default: mod.ShopsMap })),
@@ -27,20 +29,6 @@ const ShopsMap = dynamic(
 );
 import { ShopDetailModal } from './shop-detail-modal';
 import { ReportModal } from '@/components/report-modal';
-
-interface Shop {
-  id: string;
-  name: string;
-  description: string | null;
-  address: string;
-  city: string;
-  postcode: string;
-  latitude: number | null;
-  longitude: number | null;
-  website: string | null;
-  phone: string | null;
-  source: string | null;
-}
 
 const UK_REGIONS = [
   'All Regions',
@@ -138,7 +126,11 @@ export function ShopsDirectory() {
   };
 
   const shopsWithLocation = useMemo(
-    () => shops.filter((shop) => shop.latitude && shop.longitude),
+    () =>
+      shops.filter(
+        (shop): shop is Shop & { latitude: number; longitude: number } =>
+          !!(shop.latitude && shop.longitude),
+      ) as unknown as MapShop[],
     [shops],
   );
 

@@ -10,20 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-
-interface Event {
-  id: string;
-  name: string;
-  description: string | null;
-  startDate: string;
-  endDate: string | null;
-  location: string;
-  address: string;
-  latitude: number | null;
-  longitude: number | null;
-  website: string | null;
-  source: string | null;
-}
+import type { Event } from '@/types';
 
 interface EventDetailModalProps {
   event: Event;

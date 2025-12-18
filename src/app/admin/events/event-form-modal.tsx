@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import type { Event } from '@/types';
 
 const eventSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -31,20 +32,6 @@ const eventSchema = z.object({
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
-
-interface Event {
-  id: string;
-  name: string;
-  description: string | null;
-  startDate: string;
-  endDate: string | null;
-  location: string;
-  address: string;
-  latitude: number | null;
-  longitude: number | null;
-  website: string | null;
-  source: string | null;
-}
 
 interface EventFormModalProps {
   event: Event | null;

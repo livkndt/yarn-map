@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import type { Shop } from '@/types';
 
 const shopSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -51,20 +52,6 @@ const shopSchema = z.object({
 });
 
 type ShopFormData = z.infer<typeof shopSchema>;
-
-interface Shop {
-  id: string;
-  name: string;
-  description: string | null;
-  address: string;
-  city: string;
-  postcode: string;
-  latitude: number | null;
-  longitude: number | null;
-  website: string | null;
-  phone: string | null;
-  source: string | null;
-}
 
 interface ShopFormModalProps {
   shop: Shop | null;

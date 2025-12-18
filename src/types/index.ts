@@ -1,23 +1,3 @@
-export type EntityType = 'event' | 'shop';
-
-export type IssueType = 'incorrect_info' | 'duplicate' | 'closed' | 'other';
-
-export interface Event {
-  id: string;
-  name: string;
-  description: string | null;
-  startDate: Date;
-  endDate: Date | null;
-  location: string;
-  address: string;
-  latitude: number | null;
-  longitude: number | null;
-  website: string | null;
-  source: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface Shop {
   id: string;
   name: string;
@@ -30,17 +10,29 @@ export interface Shop {
   website: string | null;
   phone: string | null;
   source: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+}
+
+export interface Event {
+  id: string;
+  name: string;
+  description: string | null;
+  startDate: string;
+  endDate: string | null;
+  location: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  website: string | null;
+  source: string | null;
 }
 
 export interface Report {
   id: string;
-  entityType: EntityType;
+  entityType: 'Event' | 'Shop';
   entityId: string;
-  issueType: IssueType;
-  description: string | null;
+  issueType: string;
+  description: string;
   reporterEmail: string | null;
-  status: string;
-  createdAt: Date;
+  status: 'pending' | 'reviewed' | 'resolved' | 'dismissed';
+  createdAt: string;
 }

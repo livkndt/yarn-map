@@ -7,20 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { EventFormModal } from './event-form-modal';
-
-interface Event {
-  id: string;
-  name: string;
-  description: string | null;
-  startDate: string;
-  endDate: string | null;
-  location: string;
-  address: string;
-  latitude: number | null;
-  longitude: number | null;
-  website: string | null;
-  source: string | null;
-}
+import type { Event } from '@/types';
 
 export function EventsManagement() {
   const [events, setEvents] = useState<Event[]>([]);

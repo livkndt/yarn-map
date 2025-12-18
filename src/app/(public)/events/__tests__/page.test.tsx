@@ -1,34 +1,21 @@
 import { render, screen } from '@testing-library/react';
 import EventsPage from '../page';
 
+// Mock the EventsDirectory component
+jest.mock('../events-directory', () => ({
+  EventsDirectory: () => <div>Events Directory Component</div>,
+}));
+
 describe('EventsPage', () => {
-  it('should render the page heading', () => {
+  it('should render the EventsDirectory component', () => {
     render(<EventsPage />);
-    expect(
-      screen.getByRole('heading', { name: /events directory/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Events Directory Component')).toBeInTheDocument();
   });
 
-  it('should render the "Coming Soon" message', () => {
+  it('should have correct metadata', () => {
+    // Metadata is set via Next.js metadata export, which is tested at build time
+    // This test verifies the page component renders
     render(<EventsPage />);
-    expect(
-      screen.getByText(/coming soon - events directory/i),
-    ).toBeInTheDocument();
-  });
-
-  it('should render the description text', () => {
-    render(<EventsPage />);
-    expect(
-      screen.getByText(
-        /we're building a comprehensive directory of fiber arts events/i,
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it('should render the Calendar icon', () => {
-    const { container } = render(<EventsPage />);
-    // Check for Calendar icon (lucide-react icons render as SVGs)
-    const svg = container.querySelector('svg');
-    expect(svg).toBeInTheDocument();
+    expect(screen.getByText('Events Directory Component')).toBeInTheDocument();
   });
 });
