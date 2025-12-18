@@ -11,6 +11,9 @@ jest.mock('@/lib/db', () => ({
       count: jest.fn(),
       create: jest.fn(),
     },
+    auditLog: {
+      create: jest.fn(),
+    },
   },
 }));
 
@@ -22,7 +25,15 @@ jest.mock('@/lib/ratelimit', () => ({
   checkRateLimit: jest.fn(),
 }));
 
-const mockDb = db as jest.Mocked<typeof db>;
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
+const mockDb = db as any;
 const mockAuth = auth as jest.MockedFunction<typeof auth>;
 const mockCheckRateLimit = checkRateLimit as jest.MockedFunction<
   typeof checkRateLimit
@@ -31,6 +42,12 @@ const mockCheckRateLimit = checkRateLimit as jest.MockedFunction<
 describe('Reports API Route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCheckRateLimit.mockResolvedValue({
+      success: true,
+      remaining: 99,
+      reset: Date.now() + 3600000,
+      limit: 100,
+    });
   });
 
   describe('POST /api/reports', () => {

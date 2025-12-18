@@ -7,6 +7,8 @@ export const metadata: Metadata = {
     'Discover independent yarn shops across the UK with locations, contact information, and specialties.',
 };
 
+export const revalidate = 3600; // Revalidate every hour
+
 export default function ShopsPage() {
   return <ShopsDirectory />;
 }

@@ -88,6 +88,45 @@ The platform features a clean, modern UI with a warm aesthetic, built with Next.
 - **Performance**: Lazy loading, optimized queries, React.memo where appropriate
 - **Mobile Responsive**: Tested at multiple breakpoints (320px to 1440px)
 
+## Security & Production Readiness
+
+The application includes several security measures for production use:
+
+### 1. Database Security
+
+- **Connection Pooling**: Uses `pg.Pool` with a maximum of 10 concurrent connections to prevent database exhaustion.
+- **Timeouts**: Configured with a 5-second connection timeout and 30-second idle timeout for resilience.
+- **Parameterized Queries**: All database interactions use Prisma's standard methods, which automatically parameterize queries to prevent SQL injection.
+- **Server-Only Access**: Database logic is strictly confined to Server Components and API routes.
+
+### 2. Rate Limiting
+
+Public API routes are rate-limited per IP address to prevent abuse and scraping:
+
+- **Reports**: 5 requests per hour (strict to prevent spam)
+- **Shops/Events List**: 100 requests per hour
+- **Shops/Events Detail**: 200 requests per hour
+- **Health Check**: 100 requests per hour
+
+### 3. Input Validation
+
+- All API inputs are validated using **Zod** schemas.
+- Postcodes are validated against UK formats.
+- Lat/Lng coordinates are checked for valid ranges.
+- URLs are validated for correct formatting.
+
+### 4. Admin Protection
+
+- Admin routes are protected by NextAuth.js v5 with JWT sessions.
+- Credentials-based login with a configurable `ADMIN_PASSWORD`.
+- CSRF protection is built-in for Server Actions and NextAuth routes.
+
+### 5. Monitoring & Logging
+
+- **Secure Logging**: Logs are sanitized to mask PII (emails, phone numbers) and remove sensitive data (passwords, tokens).
+- **Audit Logging**: All admin actions (create, update, delete) are recorded in the `audit_logs` database table.
+- **Error Tracking**: Client-side and server-side errors are logged for monitoring and troubleshooting.
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)

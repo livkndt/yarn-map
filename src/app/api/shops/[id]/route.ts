@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/ratelimit';
+import { logAudit } from '@/lib/audit';
 import { z } from 'zod';
 
 const updateShopSchema = z.object({
@@ -25,6 +27,19 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    // Rate limiting
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+    const identifier = `shops:detail:${ip}`;
+    const rateLimit = await checkRateLimit(identifier, 'default'); // 100 requests per hour
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 },
+      );
+    }
+
     const { id } = await params;
     const shop = await db.shop.findUnique({
       where: { id },
@@ -55,6 +70,19 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limiting for admin actions
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+    const identifier = `admin:shop:update:${ip}`;
+    const rateLimit = await checkRateLimit(identifier, 'veryStrict');
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 },
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
     const data = updateShopSchema.parse(body);
@@ -76,6 +104,16 @@ export async function PATCH(
     const shop = await db.shop.update({
       where: { id },
       data: updateData,
+    });
+
+    // Audit logging
+    await logAudit({
+      action: 'shop.update',
+      userId: session.user?.id,
+      resourceId: shop.id,
+      metadata: { name: shop.name },
+      ipAddress:
+        request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
     });
 
     return NextResponse.json(shop);
@@ -105,9 +143,31 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limiting for admin actions
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+    const identifier = `admin:shop:delete:${ip}`;
+    const rateLimit = await checkRateLimit(identifier, 'veryStrict');
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 },
+      );
+    }
+
     const { id } = await params;
     await db.shop.delete({
       where: { id },
+    });
+
+    // Audit logging
+    await logAudit({
+      action: 'shop.delete',
+      userId: session.user?.id,
+      resourceId: id,
+      ipAddress:
+        request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
     });
 
     return NextResponse.json({ success: true });

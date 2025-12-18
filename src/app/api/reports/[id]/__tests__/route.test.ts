@@ -2,11 +2,15 @@ import { NextRequest } from 'next/server';
 import { PATCH } from '../route';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/ratelimit';
 
 jest.mock('@/lib/db', () => ({
   db: {
     report: {
       update: jest.fn(),
+    },
+    auditLog: {
+      create: jest.fn(),
     },
   },
 }));
@@ -15,12 +19,33 @@ jest.mock('@/lib/auth', () => ({
   auth: jest.fn(),
 }));
 
-const mockDb = db as jest.Mocked<typeof db>;
+jest.mock('@/lib/ratelimit', () => ({
+  checkRateLimit: jest.fn(),
+}));
+
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
+const mockDb = db as any;
 const mockAuth = auth as jest.MockedFunction<typeof auth>;
+const mockCheckRateLimit = checkRateLimit as jest.MockedFunction<
+  typeof checkRateLimit
+>;
 
 describe('Reports API Route [id]', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCheckRateLimit.mockResolvedValue({
+      success: true,
+      remaining: 99,
+      reset: Date.now() + 3600000,
+      limit: 100,
+    });
   });
 
   describe('PATCH /api/reports/[id]', () => {

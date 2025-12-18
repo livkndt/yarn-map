@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { logAudit } from '@/lib/audit';
 import { z } from 'zod';
 
 const updateReportSchema = z.object({
@@ -27,6 +28,16 @@ export async function PATCH(
       data: {
         status: data.status,
       },
+    });
+
+    // Audit logging
+    await logAudit({
+      action: 'report.update_status',
+      userId: session.user?.id,
+      resourceId: id,
+      metadata: { status: data.status },
+      ipAddress:
+        request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
     });
 
     return NextResponse.json(report);

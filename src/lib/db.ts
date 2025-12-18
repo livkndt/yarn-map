@@ -13,11 +13,15 @@ if (!connectionString) {
   throw new Error('DATABASE_URL is not set');
 }
 
-// Create a connection pool
+// Create a connection pool with limits for security and stability
 const pool =
   globalForPrisma.pool ??
   new Pool({
     connectionString,
+    max: 10, // Maximum number of clients in the pool
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000, // Slightly longer timeout for resilience
+    allowExitOnIdle: true, // Allow the process to exit if the pool is idle
   });
 
 if (process.env.NODE_ENV !== 'production') {

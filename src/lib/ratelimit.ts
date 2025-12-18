@@ -1,64 +1,80 @@
-// Simple in-memory rate limiter
-// For production, consider using @upstash/ratelimit with Redis
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
-interface RateLimitEntry {
-  count: number;
-  resetTime: number;
+// Only initialize Redis and Ratelimit once
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL || '',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+});
+
+// Define different rate limiters for different use cases
+const defaultRatelimit = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.fixedWindow(100, '1h'), // 100 requests per hour
+  analytics: true,
+  prefix: 'ratelimit:default',
+});
+
+const strictRatelimit = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.fixedWindow(5, '1h'), // 5 requests per hour
+  analytics: true,
+  prefix: 'ratelimit:strict',
+});
+
+const veryStrictRatelimit = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.fixedWindow(2, '1h'), // 2 requests per hour
+  analytics: true,
+  prefix: 'ratelimit:very_strict',
+});
+
+interface RateLimitConfig {
+  limiter: Ratelimit;
+  maxRequests: number;
+  window: string;
 }
 
-const rateLimitStore = new Map<string, RateLimitEntry>();
+const rateLimitConfigs: Record<string, RateLimitConfig> = {
+  default: { limiter: defaultRatelimit, maxRequests: 100, window: '1h' },
+  strict: { limiter: strictRatelimit, maxRequests: 5, window: '1h' },
+  veryStrict: { limiter: veryStrictRatelimit, maxRequests: 2, window: '1h' },
+};
 
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
-const MAX_REQUESTS = 5;
-
-export async function checkRateLimit(identifier: string): Promise<{
+export async function checkRateLimit(
+  identifier: string,
+  type: 'default' | 'strict' | 'veryStrict' = 'default',
+): Promise<{
   success: boolean;
   remaining: number;
   reset: number;
+  limit: number;
 }> {
-  const now = Date.now();
-  const entry = rateLimitStore.get(identifier);
-
-  if (!entry || now > entry.resetTime) {
-    // Create new entry or reset expired entry
-    const newEntry: RateLimitEntry = {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW,
-    };
-    rateLimitStore.set(identifier, newEntry);
+  // If environment variables are missing, bypass rate limiting in development
+  if (
+    !process.env.UPSTASH_REDIS_REST_URL ||
+    !process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error(
+        'UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN is missing',
+      );
+    }
     return {
       success: true,
-      remaining: MAX_REQUESTS - 1,
-      reset: newEntry.resetTime,
+      remaining: 999,
+      reset: Date.now() + 3600000,
+      limit: 1000,
     };
   }
 
-  if (entry.count >= MAX_REQUESTS) {
-    return {
-      success: false,
-      remaining: 0,
-      reset: entry.resetTime,
-    };
+  const config = rateLimitConfigs[type];
+  if (!config) {
+    throw new Error(`Unknown rate limit type: ${type}`);
   }
 
-  entry.count += 1;
-  rateLimitStore.set(identifier, entry);
+  const { success, limit, remaining, reset } =
+    await config.limiter.limit(identifier);
 
-  return {
-    success: true,
-    remaining: MAX_REQUESTS - entry.count,
-    reset: entry.resetTime,
-  };
-}
-
-// Clean up old entries periodically (optional, for memory management)
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of rateLimitStore.entries()) {
-      if (now > entry.resetTime) {
-        rateLimitStore.delete(key);
-      }
-    }
-  }, RATE_LIMIT_WINDOW);
+  return { success, remaining, reset, limit };
 }

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/ratelimit';
+import { logAudit } from '@/lib/audit';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 const createShopSchema = z.object({
@@ -24,6 +27,19 @@ const createShopSchema = z.object({
 // GET /api/shops - List all shops with filters
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+    const identifier = `shops:list:${ip}`;
+    const rateLimit = await checkRateLimit(identifier, 'default'); // 100 requests per hour
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 },
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const city = searchParams.get('city');
     const search = searchParams.get('search');
@@ -65,7 +81,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('Error fetching shops:', error);
+    logger.error('Error fetching shops', error);
     return NextResponse.json(
       { error: 'Failed to fetch shops' },
       { status: 500 },
@@ -79,6 +95,19 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limiting for admin actions
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+    const identifier = `admin:shop:create:${ip}`;
+    const rateLimit = await checkRateLimit(identifier, 'veryStrict');
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 },
+      );
     }
 
     const body = await request.json();
@@ -99,6 +128,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Audit logging
+    await logAudit({
+      action: 'shop.create',
+      userId: session.user?.id,
+      resourceId: shop.id,
+      metadata: { name: shop.name },
+      ipAddress:
+        request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
+    });
+
     return NextResponse.json(shop, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -107,7 +146,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    console.error('Error creating shop:', error);
+    logger.error('Error creating shop', error);
     return NextResponse.json(
       { error: 'Failed to create shop' },
       { status: 500 },

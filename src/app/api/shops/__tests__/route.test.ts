@@ -2,12 +2,16 @@ import { NextRequest } from 'next/server';
 import { GET, POST } from '../route';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/ratelimit';
 
 jest.mock('@/lib/db', () => ({
   db: {
     shop: {
       findMany: jest.fn(),
       count: jest.fn(),
+      create: jest.fn(),
+    },
+    auditLog: {
       create: jest.fn(),
     },
   },
@@ -17,12 +21,33 @@ jest.mock('@/lib/auth', () => ({
   auth: jest.fn(),
 }));
 
-const mockDb = db as jest.Mocked<typeof db>;
+jest.mock('@/lib/ratelimit', () => ({
+  checkRateLimit: jest.fn(),
+}));
+
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
+const mockDb = db as any;
 const mockAuth = auth as jest.MockedFunction<typeof auth>;
+const mockRateLimit = checkRateLimit as jest.MockedFunction<
+  typeof checkRateLimit
+>;
 
 describe('Shops API Route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRateLimit.mockResolvedValue({
+      success: true,
+      remaining: 99,
+      reset: Date.now() + 3600000,
+      limit: 100,
+    });
   });
 
   describe('GET /api/shops', () => {

@@ -66,3 +66,17 @@ model Report {
   @@map("reports")
 }
 
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  userId     String?  @map("user_id")
+  resourceId String?  @map("resource_id")
+  metadata   Json?
+  ipAddress  String?  @map("ip_address")
+  timestamp  DateTime @default(now())
+
+  @@index([action])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+

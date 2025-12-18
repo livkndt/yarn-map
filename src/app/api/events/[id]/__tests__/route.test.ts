@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { GET, PATCH, DELETE } from '../route';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/ratelimit';
 
 jest.mock('@/lib/db', () => ({
   db: {
@@ -10,6 +11,9 @@ jest.mock('@/lib/db', () => ({
       update: jest.fn(),
       delete: jest.fn(),
     },
+    auditLog: {
+      create: jest.fn(),
+    },
   },
 }));
 
@@ -17,12 +21,25 @@ jest.mock('@/lib/auth', () => ({
   auth: jest.fn(),
 }));
 
-const mockDb = db as jest.Mocked<typeof db>;
+jest.mock('@/lib/ratelimit', () => ({
+  checkRateLimit: jest.fn(),
+}));
+
+const mockDb = db as any;
 const mockAuth = auth as jest.MockedFunction<typeof auth>;
+const mockRateLimit = checkRateLimit as jest.MockedFunction<
+  typeof checkRateLimit
+>;
 
 describe('Events API Route [id]', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRateLimit.mockResolvedValue({
+      success: true,
+      remaining: 199,
+      reset: Date.now() + 3600000,
+      limit: 200,
+    });
   });
 
   describe('GET /api/events/[id]', () => {

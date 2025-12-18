@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/ratelimit';
+import { logAudit } from '@/lib/audit';
 import { z } from 'zod';
 
 const createEventSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional().nullable(),
-  startDate: z
-    .string()
-    .refine((val) => !isNaN(Date.parse(val)), {
-      message: 'Invalid start date format',
-    }),
+  startDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: 'Invalid start date format',
+  }),
   endDate: z
     .string()
     .refine((val) => !val || !isNaN(Date.parse(val)), {
@@ -33,6 +33,19 @@ const createEventSchema = z.object({
 // GET /api/events - List all events with filters
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+    const identifier = `events:list:${ip}`;
+    const rateLimit = await checkRateLimit(identifier, 'default'); // 100 requests per hour
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 },
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const upcoming = searchParams.get('upcoming') === 'true';
     const location = searchParams.get('location');
@@ -111,6 +124,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limiting for admin actions
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+    const identifier = `admin:event:create:${ip}`;
+    const rateLimit = await checkRateLimit(identifier, 'veryStrict');
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 },
+      );
+    }
+
     const body = await request.json();
     const data = createEventSchema.parse(body);
 
@@ -127,6 +153,16 @@ export async function POST(request: NextRequest) {
         website: data.website || null,
         source: data.source,
       },
+    });
+
+    // Audit logging
+    await logAudit({
+      action: 'event.create',
+      userId: session.user?.id,
+      resourceId: event.id,
+      metadata: { name: event.name },
+      ipAddress:
+        request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
     });
 
     return NextResponse.json(event, { status: 201 });

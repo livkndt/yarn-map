@@ -83,6 +83,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limiting
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+    const identifier = `reports:list:${ip}`;
+    const rateLimit = await checkRateLimit(identifier, 'default');
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 },
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
     const entityType = searchParams.get('entityType');
