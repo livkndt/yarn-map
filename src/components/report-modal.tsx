@@ -33,7 +33,7 @@ const reportSchema = z.object({
     'Other',
   ]),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  reporterEmail: z.string().email().optional().or(z.literal('')),
+  reporterEmail: z.string().email().nullable().optional().or(z.literal('')),
   honeypot: z.string().optional(),
 });
 
@@ -104,7 +104,12 @@ export function ReportModal({
 
       if (!response.ok) {
         const errorData = await response.json();
-        toast.error(errorData.error || 'Failed to submit report');
+        if (errorData.details && Array.isArray(errorData.details)) {
+          const firstError = errorData.details[0];
+          toast.error(firstError.message || 'Validation error');
+        } else {
+          toast.error(errorData.error || 'Failed to submit report');
+        }
         return;
       }
 

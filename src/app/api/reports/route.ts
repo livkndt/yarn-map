@@ -15,7 +15,7 @@ const createReportSchema = z.object({
     'Other',
   ]),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  reporterEmail: z.string().email().optional().or(z.literal('')),
+  reporterEmail: z.string().email().nullable().optional().or(z.literal('')),
   honeypot: z.string().optional(), // Spam prevention
 });
 
