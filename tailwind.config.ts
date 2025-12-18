@@ -32,6 +32,10 @@ const config: Config = {
           DEFAULT: '#ef4444',
           foreground: '#ffffff',
         },
+        popover: {
+          DEFAULT: '#ffffff',
+          foreground: '#1a1a1a',
+        },
         border: '#e5e5e5',
         input: '#e5e5e5',
         ring: '#0F6B6B',

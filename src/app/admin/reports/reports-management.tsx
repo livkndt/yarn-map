@@ -245,7 +245,7 @@ export function ReportsManagement() {
                         )}
                       </div>
                     </div>
-                    <div className="ml-4 flex flex-col gap-2">
+                    <div className="ml-4 flex flex-col items-end gap-3">
                       <Select
                         value={report.status}
                         onValueChange={(value) =>
@@ -261,7 +261,7 @@ export function ReportsManagement() {
                           <SelectItem value="resolved">Resolved</SelectItem>
                         </SelectContent>
                       </Select>
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="sm"
@@ -280,6 +280,7 @@ export function ReportsManagement() {
                           <Button
                             variant="outline"
                             size="icon"
+                            className="h-9 w-9"
                             onClick={() => handleDelete(report.id)}
                           >
                             <Trash2 className="h-4 w-4" />
