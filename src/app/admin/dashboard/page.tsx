@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { auth, signOut } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -27,19 +27,6 @@ export default async function AdminDashboardPage() {
         <p className="mt-2 text-muted-foreground">
           Welcome back, {session.user?.email || 'Admin'}
         </p>
-      </div>
-
-      <div className="mb-8">
-        <form
-          action={async () => {
-            'use server';
-            await signOut({ redirectTo: '/admin' });
-          }}
-        >
-          <Button type="submit" variant="outline">
-            Sign Out
-          </Button>
-        </form>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -57,19 +57,6 @@ describe('AdminDashboardPage', () => {
     expect(screen.getByText(/welcome back, admin/i)).toBeInTheDocument();
   });
 
-  it('should render Sign Out button', async () => {
-    mockAuth.mockResolvedValue({
-      user: { email: 'admin@example.com' },
-    });
-
-    const page = await AdminDashboardPage();
-    render(page);
-
-    expect(
-      screen.getByRole('button', { name: /sign out/i }),
-    ).toBeInTheDocument();
-  });
-
   it('should render Manage Events card', async () => {
     mockAuth.mockResolvedValue({
       user: { email: 'admin@example.com' },
@@ -126,22 +113,5 @@ describe('AdminDashboardPage', () => {
 
     await expect(AdminDashboardPage()).rejects.toThrow('Redirect called');
     expect(mockRedirect).toHaveBeenCalledWith('/admin');
-  });
-
-  it('should render form with signOut action', async () => {
-    mockAuth.mockResolvedValue({
-      user: { email: 'admin@example.com' },
-    });
-
-    const page = await AdminDashboardPage();
-    const { container } = render(page);
-
-    const form = container.querySelector('form');
-    expect(form).toBeInTheDocument();
-    // Server actions don't render as HTML attributes in test environment
-    // Just verify the form exists and has a submit button
-    const submitButton = screen.getByRole('button', { name: /sign out/i });
-    expect(submitButton).toBeInTheDocument();
-    expect(submitButton).toHaveAttribute('type', 'submit');
   });
 });
