@@ -50,9 +50,11 @@ export function EventDetailModal({
 
   const googleMapsUrl =
     event.latitude && event.longitude
-      ? `https://www.google.com/maps?q=${event.latitude},${event.longitude}`
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${event.name}, ${event.address}, ${event.location}`,
+        )}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          `${event.address}, ${event.location}`,
+          `${event.name}, ${event.address}, ${event.location}`,
         )}`;
 
   return (

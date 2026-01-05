@@ -25,9 +25,11 @@ export function ShopDetailModal({
 }: ShopDetailModalProps) {
   const googleMapsUrl =
     shop.latitude && shop.longitude
-      ? `https://www.google.com/maps?q=${shop.latitude},${shop.longitude}`
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${shop.name}, ${shop.address}, ${shop.city}, ${shop.postcode}`,
+        )}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          `${shop.address}, ${shop.city}, ${shop.postcode}`,
+          `${shop.name}, ${shop.address}, ${shop.city}, ${shop.postcode}`,
         )}`;
 
   return (
