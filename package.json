@@ -18,6 +18,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "dotenv -e .env tsx prisma/seed.ts",
+    "fetch-shops": "tsx scripts/fetch-yarn-shops.ts",
     "postinstall": "prisma generate",
     "prepare": "husky"
   },
