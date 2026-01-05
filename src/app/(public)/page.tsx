@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin } from 'lucide-react';
 import { db } from '@/lib/db';
+import { SubmissionSection } from './submission-section';
 
 async function getStats() {
   const [upcomingEventsCount, shopsCount] = await Promise.all([
@@ -54,6 +55,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Submission Section */}
+      <SubmissionSection />
 
       {/* Stats Section */}
       <section className="border-t bg-muted/30">

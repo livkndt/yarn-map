@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import Link from 'next/link';
-import { Calendar, MapPin, Flag } from 'lucide-react';
+import { Calendar, MapPin, Flag, Plus } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
   const session = await auth();
@@ -29,7 +29,7 @@ export default async function AdminDashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
             <div className="flex items-center space-x-2">
@@ -58,6 +58,23 @@ export default async function AdminDashboardPage() {
           <CardContent>
             <Button asChild className="w-full">
               <Link href="/admin/shops">Manage Shops</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <Plus className="h-5 w-5 text-primary" />
+              <CardTitle>Review Submissions</CardTitle>
+            </div>
+            <CardDescription>
+              Review and approve user-submitted events and shops
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full">
+              <Link href="/admin/submissions">Review Submissions</Link>
             </Button>
           </CardContent>
         </Card>

@@ -16,6 +16,8 @@ import {
 import { format, parseISO } from 'date-fns';
 import { EventDetailModal } from './event-detail-modal';
 import { ReportModal } from '@/components/report-modal';
+import { SubmissionModal } from '@/components/submission-modal';
+import { Plus } from 'lucide-react';
 import type { Event } from '@/types';
 
 const UK_REGIONS = [
@@ -38,6 +40,7 @@ export function EventsDirectory() {
     type: 'Event' | 'Shop';
     id: string;
   } | null>(null);
+  const [submissionModalOpen, setSubmissionModalOpen] = useState(false);
 
   // Filters
   const [upcoming, setUpcoming] = useState(true);
@@ -123,12 +126,22 @@ export function EventsDirectory() {
             Discover fiber arts events across the UK
           </p>
         </div>
-        <Button asChild variant="outline" className="hidden md:flex">
-          <Link href="/events/calendar">
-            <CalendarDays className="mr-2 h-4 w-4" />
-            Calendar View
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setSubmissionModalOpen(true)}
+            variant="outline"
+            className="hidden md:flex"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Submit Event
+          </Button>
+          <Button asChild variant="outline" className="hidden md:flex">
+            <Link href="/events/calendar">
+              <CalendarDays className="mr-2 h-4 w-4" />
+              Calendar View
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -306,6 +319,13 @@ export function EventsDirectory() {
           onClose={() => setReportEntity(null)}
         />
       )}
+
+      {/* Submission Modal */}
+      <SubmissionModal
+        entityType="Event"
+        open={submissionModalOpen}
+        onClose={() => setSubmissionModalOpen(false)}
+      />
     </div>
   );
 }

@@ -29,6 +29,8 @@ const ShopsMap = dynamic(
 );
 import { ShopDetailModal } from './shop-detail-modal';
 import { ReportModal } from '@/components/report-modal';
+import { SubmissionModal } from '@/components/submission-modal';
+import { Plus } from 'lucide-react';
 
 const UK_REGIONS = [
   'All Regions',
@@ -53,6 +55,7 @@ export function ShopsDirectory() {
     type: 'Event' | 'Shop';
     id: string;
   } | null>(null);
+  const [submissionModalOpen, setSubmissionModalOpen] = useState(false);
   const [view, setView] = useState<'map' | 'list'>('map');
   const [userLocation, setUserLocation] = useState<{
     lat: number;
@@ -178,13 +181,23 @@ export function ShopsDirectory() {
 
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground">
-          Yarn Shops Directory
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Discover independent yarn shops across the UK
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground">
+            Yarn Shops Directory
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Discover independent yarn shops across the UK
+          </p>
+        </div>
+        <Button
+          onClick={() => setSubmissionModalOpen(true)}
+          variant="outline"
+          className="hidden md:flex"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Submit a Shop
+        </Button>
       </div>
 
       {/* Filters and View Toggle */}
@@ -395,6 +408,13 @@ export function ShopsDirectory() {
           onClose={() => setReportEntity(null)}
         />
       )}
+
+      {/* Submission Modal */}
+      <SubmissionModal
+        entityType="Shop"
+        open={submissionModalOpen}
+        onClose={() => setSubmissionModalOpen(false)}
+      />
     </div>
   );
 }
