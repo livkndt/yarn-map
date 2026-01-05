@@ -44,15 +44,6 @@ describe('Rate Limiter', () => {
   });
 
   it('should handle rate limit failure', async () => {
-    // We need to re-mock or use a spy to simulate failure
-    const { Ratelimit } = require('@upstash/ratelimit');
-    const mockLimit = jest.fn().mockResolvedValue({
-      success: false,
-      limit: 5,
-      remaining: 0,
-      reset: Date.now() + 3600000,
-    });
-
     // This is a bit tricky since the limiter is created at module level in ratelimit.ts
     // For simplicity, let's just test the return values we get from the mocked Upstash
     const result = await checkRateLimit(getUniqueId(), 'strict');

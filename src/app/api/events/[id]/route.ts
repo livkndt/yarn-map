@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/ratelimit';
 import { logAudit } from '@/lib/audit';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 const updateEventSchema = z.object({
@@ -48,7 +49,7 @@ export async function GET(
 
     return NextResponse.json(event);
   } catch (error) {
-    console.error('Error fetching event:', error);
+    logger.error('Error fetching event', error);
     return NextResponse.json(
       { error: 'Failed to fetch event' },
       { status: 500 },
@@ -122,7 +123,7 @@ export async function PATCH(
         { status: 400 },
       );
     }
-    console.error('Error updating event:', error);
+    logger.error('Error updating event', error);
     return NextResponse.json(
       { error: 'Failed to update event' },
       { status: 500 },
@@ -170,7 +171,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting event:', error);
+    logger.error('Error deleting event', error);
     return NextResponse.json(
       { error: 'Failed to delete event' },
       { status: 500 },

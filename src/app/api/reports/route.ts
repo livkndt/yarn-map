@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/ratelimit';
+import { logAudit } from '@/lib/audit';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 const createReportSchema = z.object({
@@ -59,6 +61,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Audit logging
+    await logAudit({
+      action: 'report.create',
+      resourceId: report.id,
+      metadata: { entityType: report.entityType },
+      ipAddress: ip,
+    });
+
     return NextResponse.json(report, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -67,7 +77,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    console.error('Error creating report:', error);
+    logger.error('Error creating report', error);
     return NextResponse.json(
       { error: 'Failed to submit report' },
       { status: 500 },

@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import Link from 'next/link';
-import { Calendar, MapPin, FileText, Flag } from 'lucide-react';
+import { Calendar, MapPin, Flag } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
   const session = await auth();

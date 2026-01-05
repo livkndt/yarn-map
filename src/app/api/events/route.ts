@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/ratelimit';
 import { logAudit } from '@/lib/audit';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 const createEventSchema = z.object({
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('Error fetching events:', error);
+    logger.error('Error fetching events', error);
     return NextResponse.json(
       { error: 'Failed to fetch events' },
       { status: 500 },
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(event, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('Validation error:', error.errors);
+      logger.warn('Event validation error', { errors: error.errors });
       return NextResponse.json(
         {
           error: 'Validation error',
@@ -180,7 +181,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    console.error('Error creating event:', error);
+    logger.error('Error creating event', error);
     return NextResponse.json(
       { error: 'Failed to create event' },
       { status: 500 },

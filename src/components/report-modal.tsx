@@ -97,7 +97,6 @@ export function ReportModal({
       });
 
       if (response.status === 429) {
-        const errorData = await response.json();
         toast.error('Too many requests. Please try again later.');
         return;
       }

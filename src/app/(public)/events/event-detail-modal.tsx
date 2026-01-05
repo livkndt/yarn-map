@@ -60,33 +60,34 @@ export function EventDetailModal({
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">{event.name}</DialogTitle>
-          <DialogDescription>
-            <div className="mt-4 space-y-3">
-              <div className="flex items-start gap-2">
-                <Calendar className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                <div>
-                  <div className="font-medium">{dateInfo.date}</div>
-                  {dateInfo.time && (
-                    <div className="text-sm text-muted-foreground">
-                      {dateInfo.time}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                <div>
-                  <div className="font-medium">{event.location}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {event.address}
-                  </div>
-                </div>
-              </div>
-            </div>
+          <DialogDescription className="sr-only">
+            Event details for {event.name}
           </DialogDescription>
         </DialogHeader>
 
         <div className="mt-4 space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-start gap-2">
+              <Calendar className="mt-0.5 h-5 w-5 text-muted-foreground" />
+              <div>
+                <div className="font-medium">{dateInfo.date}</div>
+                {dateInfo.time && (
+                  <div className="text-sm text-muted-foreground">
+                    {dateInfo.time}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <MapPin className="mt-0.5 h-5 w-5 text-muted-foreground" />
+              <div>
+                <div className="font-medium">{event.location}</div>
+                <div className="text-sm text-muted-foreground">
+                  {event.address}
+                </div>
+              </div>
+            </div>
+          </div>
           {event.description && (
             <div>
               <h3 className="mb-2 font-semibold">Description</h3>

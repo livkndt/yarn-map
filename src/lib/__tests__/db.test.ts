@@ -10,10 +10,19 @@ jest.mock('@prisma/adapter-pg', () => ({
   PrismaPg: jest.fn().mockImplementation(() => ({})),
 }));
 
+jest.mock('pg', () => ({
+  Pool: jest.fn().mockImplementation(() => ({
+    on: jest.fn(),
+  })),
+}));
+
 describe('Database client', () => {
   beforeEach(() => {
-    // Clear module cache
+    // Clear module cache and global state
     jest.resetModules();
+    jest.clearAllMocks();
+    delete (globalThis as any).prisma;
+    delete (globalThis as any).pool;
   });
 
   it('should export db instance when DATABASE_URL is set', () => {
@@ -50,10 +59,8 @@ describe('Database client', () => {
     process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
 
     jest.resetModules();
-    const { PrismaClient } = require('@prisma/client');
-    const mockPrismaClient = jest.fn();
     jest.doMock('@prisma/client', () => ({
-      PrismaClient: mockPrismaClient,
+      PrismaClient: jest.fn(),
     }));
 
     require('../db');
@@ -67,10 +74,8 @@ describe('Database client', () => {
     process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
 
     jest.resetModules();
-    const { PrismaClient } = require('@prisma/client');
-    const mockPrismaClient = jest.fn();
     jest.doMock('@prisma/client', () => ({
-      PrismaClient: mockPrismaClient,
+      PrismaClient: jest.fn(),
     }));
 
     require('../db');

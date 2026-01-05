@@ -15,41 +15,73 @@ export function maskPhone(phone: string): string {
 }
 
 export const logger = {
-  info: (message: string, data?: any) => {
-    console.info(
-      `[INFO] ${new Date().toISOString()} - ${message}`,
-      sanitizeData(data),
-    );
+  log: (
+    level: 'info' | 'warn' | 'error' | 'debug',
+    message: string,
+    data?: any,
+  ) => {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      level,
+      message,
+      ...(data ? sanitizeData(data) : {}),
+    };
+
+    const output = JSON.stringify(logEntry);
+
+    switch (level) {
+      case 'error':
+        console.error(output);
+        break;
+      case 'warn':
+        console.warn(output);
+        break;
+      case 'info':
+        console.info(output);
+        break;
+      case 'debug':
+        console.debug(output);
+        break;
+    }
   },
-  warn: (message: string, data?: any) => {
-    console.warn(
-      `[WARN] ${new Date().toISOString()} - ${message}`,
-      sanitizeData(data),
-    );
-  },
+  info: (message: string, data?: any) => logger.log('info', message, data),
+  warn: (message: string, data?: any) => logger.log('warn', message, data),
   error: (message: string, error?: any) => {
-    console.error(
-      `[ERROR] ${new Date().toISOString()} - ${message}`,
-      sanitizeError(error),
-    );
+    const errorData = error instanceof Error ? sanitizeError(error) : error;
+    logger.log('error', message, errorData);
   },
+  debug: (message: string, data?: any) => logger.log('debug', message, data),
 };
 
 function sanitizeData(data: any): any {
-  if (!data) return data;
-  const sanitized = { ...data };
+  if (!data || typeof data !== 'object') return data;
 
-  // Mask PII
-  if (sanitized.email) sanitized.email = maskEmail(sanitized.email);
-  if (sanitized.reporterEmail)
-    sanitized.reporterEmail = maskEmail(sanitized.reporterEmail);
-  if (sanitized.phone) sanitized.phone = maskPhone(sanitized.phone);
+  if (Array.isArray(data)) {
+    return data.map((item) => sanitizeData(item));
+  }
 
-  // Remove sensitive fields
-  delete sanitized.password;
-  delete sanitized.token;
-  delete sanitized.secret;
-  delete sanitized.apiKey;
+  const sanitized: any = {};
+
+  for (const [key, value] of Object.entries(data)) {
+    // Mask PII
+    if (key.toLowerCase().includes('email')) {
+      sanitized[key] = typeof value === 'string' ? maskEmail(value) : value;
+    } else if (key.toLowerCase().includes('phone')) {
+      sanitized[key] = typeof value === 'string' ? maskPhone(value) : value;
+    }
+    // Remove sensitive fields
+    else if (
+      ['password', 'token', 'secret', 'apikey'].includes(key.toLowerCase())
+    ) {
+      continue;
+    }
+    // Recursive sanitize for nested objects
+    else if (value !== null && typeof value === 'object') {
+      sanitized[key] = sanitizeData(value);
+    } else {
+      sanitized[key] = value;
+    }
+  }
 
   return sanitized;
 }

@@ -106,6 +106,7 @@ export function ReportsManagement() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDelete = async (_reportId: string) => {
     if (!confirm('Are you sure you want to delete this report?')) {
       return;

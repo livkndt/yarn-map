@@ -42,6 +42,70 @@ describe('Shops API Route [id]', () => {
     });
   });
 
+  describe('Rate Limiting', () => {
+    it('should block GET when rate limit exceeded', async () => {
+      mockRateLimit.mockResolvedValue({
+        success: false,
+        remaining: 0,
+        reset: Date.now() + 3600000,
+        limit: 100,
+      });
+
+      const request = new NextRequest('http://localhost/api/shops/1');
+      const response = await GET(request, {
+        params: Promise.resolve({ id: '1' }),
+      });
+
+      expect(response.status).toBe(429);
+    });
+  });
+
+  describe('Audit Logging', () => {
+    it('should record audit log on update', async () => {
+      mockAuth.mockResolvedValue({ user: { id: 'admin-1' } });
+      mockDb.shop.update.mockResolvedValue({ id: '1', name: 'Updated' });
+
+      const request = new NextRequest('http://localhost/api/shops/1', {
+        method: 'PATCH',
+        body: JSON.stringify({ name: 'Updated' }),
+      });
+      await PATCH(request, {
+        params: Promise.resolve({ id: '1' }),
+      });
+
+      expect(mockDb.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            action: 'shop.update',
+            userId: 'admin-1',
+            resourceId: '1',
+          }),
+        }),
+      );
+    });
+
+    it('should record audit log on delete', async () => {
+      mockAuth.mockResolvedValue({ user: { id: 'admin-1' } });
+
+      const request = new NextRequest('http://localhost/api/shops/1', {
+        method: 'DELETE',
+      });
+      await DELETE(request, {
+        params: Promise.resolve({ id: '1' }),
+      });
+
+      expect(mockDb.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            action: 'shop.delete',
+            userId: 'admin-1',
+            resourceId: '1',
+          }),
+        }),
+      );
+    });
+  });
+
   describe('GET /api/shops/[id]', () => {
     it('should return shop by id', async () => {
       const mockShop = {

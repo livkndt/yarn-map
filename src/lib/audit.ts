@@ -24,8 +24,15 @@ export async function logAudit(options: AuditOptions) {
         timestamp: new Date(),
       },
     });
+    logger.info('Audit log recorded', {
+      action: options.action,
+      userId: options.userId,
+    });
   } catch (error) {
     // Fail gracefully but log the error
-    logger.error('Failed to create audit log', error);
+    logger.error('Failed to record audit log', {
+      error,
+      data: { action: options.action },
+    });
   }
 }
