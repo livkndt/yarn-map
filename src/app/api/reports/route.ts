@@ -16,7 +16,10 @@ const createReportSchema = z.object({
     'Spam',
     'Other',
   ]),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
+  description: z
+    .string()
+    .min(10, 'Description must be at least 10 characters')
+    .max(2000, 'Description must be less than 2000 characters'),
   reporterEmail: z.string().email().nullable().optional().or(z.literal('')),
   honeypot: z.string().optional(), // Spam prevention
 });
@@ -29,7 +32,8 @@ export async function POST(request: NextRequest) {
     const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
     const identifier = `report:${ip}`;
 
-    const rateLimit = await checkRateLimit(identifier);
+    // Use stricter rate limiting for reports (5 per hour instead of 100)
+    const rateLimit = await checkRateLimit(identifier, 'strict');
     if (!rateLimit.success) {
       return NextResponse.json(
         {
@@ -49,6 +53,64 @@ export async function POST(request: NextRequest) {
     }
 
     const data = createReportSchema.parse(body);
+
+    // Verify that the entity exists
+    const entityExists =
+      data.entityType === 'Event'
+        ? await db.event.findUnique({ where: { id: data.entityId } })
+        : await db.shop.findUnique({ where: { id: data.entityId } });
+
+    if (!entityExists) {
+      return NextResponse.json(
+        { error: 'The entity you are trying to report does not exist.' },
+        { status: 404 },
+      );
+    }
+
+    // Check for duplicate reports: same entity + same IP within last 24 hours
+    const oneDayAgo = new Date();
+    oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+
+    // Find all recent reports for this entity
+    const recentReports = await db.report.findMany({
+      where: {
+        entityType: data.entityType,
+        entityId: data.entityId,
+        createdAt: {
+          gte: oneDayAgo,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    // Check if any of these reports were created by the same IP
+    if (recentReports.length > 0) {
+      const reportIds = recentReports.map((r) => r.id);
+      const duplicateAuditLog = await db.auditLog.findFirst({
+        where: {
+          action: 'report.create',
+          resourceId: {
+            in: reportIds,
+          },
+          ipAddress: ip,
+          timestamp: {
+            gte: oneDayAgo,
+          },
+        },
+      });
+
+      if (duplicateAuditLog) {
+        return NextResponse.json(
+          {
+            error:
+              'You have already reported this item recently. Please wait before submitting another report.',
+          },
+          { status: 429 },
+        );
+      }
+    }
 
     const report = await db.report.create({
       data: {

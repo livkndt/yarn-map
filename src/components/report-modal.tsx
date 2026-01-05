@@ -32,7 +32,10 @@ const reportSchema = z.object({
     'Spam',
     'Other',
   ]),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
+  description: z
+    .string()
+    .min(10, 'Description must be at least 10 characters')
+    .max(2000, 'Description must be less than 2000 characters'),
   reporterEmail: z.string().email().nullable().optional().or(z.literal('')),
   honeypot: z.string().optional(),
 });
@@ -172,6 +175,7 @@ export function ReportModal({
               {...register('description')}
               placeholder="Please provide details about the issue..."
               rows={4}
+              maxLength={2000}
             />
             {errors.description && (
               <p className="text-sm text-destructive">

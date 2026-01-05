@@ -11,8 +11,15 @@ jest.mock('@/lib/db', () => ({
       count: jest.fn(),
       create: jest.fn(),
     },
+    event: {
+      findUnique: jest.fn(),
+    },
+    shop: {
+      findUnique: jest.fn(),
+    },
     auditLog: {
       create: jest.fn(),
+      findFirst: jest.fn(),
     },
   },
 }));
@@ -44,18 +51,25 @@ describe('Reports API Route', () => {
     jest.clearAllMocks();
     mockCheckRateLimit.mockResolvedValue({
       success: true,
-      remaining: 99,
+      remaining: 4,
       reset: Date.now() + 3600000,
-      limit: 100,
+      limit: 5,
     });
+    // Default mocks for entity existence checks
+    (mockDb.event.findUnique as jest.Mock).mockResolvedValue({ id: 'event-1' });
+    (mockDb.shop.findUnique as jest.Mock).mockResolvedValue(null);
+    // Default mocks for duplicate detection
+    (mockDb.report.findMany as jest.Mock).mockResolvedValue([]);
+    (mockDb.auditLog.findFirst as jest.Mock).mockResolvedValue(null);
   });
 
   describe('POST /api/reports', () => {
-    it('should create report successfully', async () => {
+    it('should create report successfully for Event', async () => {
       (mockCheckRateLimit as jest.Mock).mockResolvedValue({
         success: true,
         remaining: 4,
         reset: Date.now() + 3600000,
+        limit: 5,
       });
 
       const mockReport = {
@@ -66,6 +80,10 @@ describe('Reports API Route', () => {
         status: 'pending',
       };
 
+      (mockDb.event.findUnique as jest.Mock).mockResolvedValue({
+        id: 'event-1',
+      });
+      (mockDb.report.findMany as jest.Mock).mockResolvedValue([]);
       (mockDb.report.create as jest.Mock).mockResolvedValue(mockReport);
 
       const request = new NextRequest('http://localhost/api/reports', {
@@ -84,6 +102,51 @@ describe('Reports API Route', () => {
       const response = await POST(request);
 
       expect(response.status).toBe(201);
+      expect(mockDb.event.findUnique).toHaveBeenCalledWith({
+        where: { id: 'event-1' },
+      });
+      expect(mockDb.report.create).toHaveBeenCalled();
+    });
+
+    it('should create report successfully for Shop', async () => {
+      (mockCheckRateLimit as jest.Mock).mockResolvedValue({
+        success: true,
+        remaining: 4,
+        reset: Date.now() + 3600000,
+        limit: 5,
+      });
+
+      const mockReport = {
+        id: '2',
+        entityType: 'Shop',
+        entityId: 'shop-1',
+        issueType: 'Incorrect information',
+        status: 'pending',
+      };
+
+      (mockDb.shop.findUnique as jest.Mock).mockResolvedValue({ id: 'shop-1' });
+      (mockDb.report.findMany as jest.Mock).mockResolvedValue([]);
+      (mockDb.report.create as jest.Mock).mockResolvedValue(mockReport);
+
+      const request = new NextRequest('http://localhost/api/reports', {
+        method: 'POST',
+        headers: {
+          'x-forwarded-for': '192.168.1.1',
+        },
+        body: JSON.stringify({
+          entityType: 'Shop',
+          entityId: 'shop-1',
+          issueType: 'Incorrect information',
+          description: 'This is a test report',
+        }),
+      });
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(201);
+      expect(mockDb.shop.findUnique).toHaveBeenCalledWith({
+        where: { id: 'shop-1' },
+      });
       expect(mockDb.report.create).toHaveBeenCalled();
     });
 
@@ -92,6 +155,7 @@ describe('Reports API Route', () => {
         success: false,
         remaining: 0,
         reset: Date.now() + 3600000,
+        limit: 5,
       });
 
       const request = new NextRequest('http://localhost/api/reports', {
@@ -119,6 +183,7 @@ describe('Reports API Route', () => {
         success: true,
         remaining: 4,
         reset: Date.now() + 3600000,
+        limit: 5,
       });
 
       const request = new NextRequest('http://localhost/api/reports', {
@@ -139,11 +204,112 @@ describe('Reports API Route', () => {
       expect(data.error).toBe('Validation error');
     });
 
+    it('should reject report if entity does not exist', async () => {
+      (mockCheckRateLimit as jest.Mock).mockResolvedValue({
+        success: true,
+        remaining: 4,
+        reset: Date.now() + 3600000,
+        limit: 5,
+      });
+
+      (mockDb.event.findUnique as jest.Mock).mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost/api/reports', {
+        method: 'POST',
+        headers: {
+          'x-forwarded-for': '192.168.1.1',
+        },
+        body: JSON.stringify({
+          entityType: 'Event',
+          entityId: 'non-existent-event',
+          issueType: 'Incorrect information',
+          description: 'This is a test report',
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(data.error).toContain('does not exist');
+    });
+
+    it('should reject duplicate reports from same IP within 24 hours', async () => {
+      (mockCheckRateLimit as jest.Mock).mockResolvedValue({
+        success: true,
+        remaining: 4,
+        reset: Date.now() + 3600000,
+        limit: 5,
+      });
+
+      (mockDb.event.findUnique as jest.Mock).mockResolvedValue({
+        id: 'event-1',
+      });
+      (mockDb.report.findMany as jest.Mock).mockResolvedValue([
+        { id: 'report-1' },
+      ]);
+      (mockDb.auditLog.findFirst as jest.Mock).mockResolvedValue({
+        id: 'audit-1',
+        ipAddress: '192.168.1.1',
+      });
+
+      const request = new NextRequest('http://localhost/api/reports', {
+        method: 'POST',
+        headers: {
+          'x-forwarded-for': '192.168.1.1',
+        },
+        body: JSON.stringify({
+          entityType: 'Event',
+          entityId: 'event-1',
+          issueType: 'Incorrect information',
+          description: 'This is a duplicate report',
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(429);
+      expect(data.error).toContain('already reported');
+      expect(mockDb.report.create).not.toHaveBeenCalled();
+    });
+
+    it('should reject description exceeding max length', async () => {
+      (mockCheckRateLimit as jest.Mock).mockResolvedValue({
+        success: true,
+        remaining: 4,
+        reset: Date.now() + 3600000,
+        limit: 5,
+      });
+
+      const longDescription = 'a'.repeat(2001);
+
+      const request = new NextRequest('http://localhost/api/reports', {
+        method: 'POST',
+        headers: {
+          'x-forwarded-for': '192.168.1.1',
+        },
+        body: JSON.stringify({
+          entityType: 'Event',
+          entityId: 'event-1',
+          issueType: 'Incorrect information',
+          description: longDescription,
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Validation error');
+    });
+
     it('should silently reject spam (honeypot filled)', async () => {
       (mockCheckRateLimit as jest.Mock).mockResolvedValue({
         success: true,
         remaining: 4,
         reset: Date.now() + 3600000,
+        limit: 5,
       });
 
       const request = new NextRequest('http://localhost/api/reports', {
