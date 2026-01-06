@@ -113,13 +113,13 @@ export function ShopsMap({
       />
       <MapController shops={shops} userLocation={userLocation} />
       <MarkerClusterGroup
-        iconCreateFunction={(cluster) => {
+        iconCreateFunction={(cluster: { getChildCount: () => number }) => {
           const count = cluster.getChildCount();
           let size = 'small';
           if (count > 50) size = 'large';
           else if (count > 10) size = 'medium';
 
-          const sizes = {
+          const sizes: Record<string, [number, number]> = {
             small: [40, 40],
             medium: [50, 50],
             large: [60, 60],
@@ -130,7 +130,7 @@ export function ShopsMap({
               <span class="cluster-count">${count}</span>
             </div>`,
             className: 'custom-cluster',
-            iconSize: sizes[size as keyof typeof sizes],
+            iconSize: sizes[size],
           });
         }}
       >
