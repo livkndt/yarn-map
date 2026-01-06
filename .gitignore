@@ -34,7 +34,7 @@ yarn-error.log*
 next-env.d.ts
 
 # prisma
-/prisma/migrations
+# Note: migrations should be committed to git so they can be deployed
 
 # Local Netlify folder
 .netlify
