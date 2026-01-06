@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Run TypeScript type checking before push
 # This catches type errors that would cause build failures
 npm run type-check
