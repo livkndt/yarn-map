@@ -112,7 +112,28 @@ export function ShopsMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <MapController shops={shops} userLocation={userLocation} />
-      <MarkerClusterGroup>
+      <MarkerClusterGroup
+        iconCreateFunction={(cluster) => {
+          const count = cluster.getChildCount();
+          let size = 'small';
+          if (count > 50) size = 'large';
+          else if (count > 10) size = 'medium';
+
+          const sizes = {
+            small: [40, 40],
+            medium: [50, 50],
+            large: [60, 60],
+          };
+
+          return L.divIcon({
+            html: `<div class="cluster-marker cluster-${size}">
+              <span class="cluster-count">${count}</span>
+            </div>`,
+            className: 'custom-cluster',
+            iconSize: sizes[size as keyof typeof sizes],
+          });
+        }}
+      >
         {shops.map((shop) => (
           <Marker
             key={shop.id}
