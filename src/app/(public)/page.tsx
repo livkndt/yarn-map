@@ -4,6 +4,9 @@ import { Calendar, MapPin } from 'lucide-react';
 import { db } from '@/lib/db';
 import { SubmissionSection } from './submission-section';
 
+// Force dynamic rendering to ensure stats are always up-to-date
+export const dynamic = 'force-dynamic';
+
 async function getStats() {
   const [upcomingEventsCount, shopsCount] = await Promise.all([
     db.event.count({
