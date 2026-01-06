@@ -21,6 +21,8 @@
     "fetch-shops": "tsx scripts/fetch-yarn-shops.ts",
     "lighthouse": "lighthouse http://localhost:3000 --output html --output-path ./lighthouse-report.html --view",
     "lighthouse:ci": "lhci autorun",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
     "postinstall": "prisma generate",
     "prepare": "husky"
   },
