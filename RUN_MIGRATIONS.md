@@ -1,5 +1,7 @@
 # Running Migrations on Prisma Postgres
 
+**Important**: Migrations are no longer run automatically during build to avoid build failures. You need to run them manually after deployment.
+
 If your tables aren't showing up in Prisma Console, you need to run migrations manually.
 
 ## Option 1: Run Migrations via Netlify CLI (Recommended)
