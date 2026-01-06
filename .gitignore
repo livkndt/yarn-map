@@ -42,3 +42,8 @@ next-env.d.ts
 # Script output
 /scripts/output
 /scripts
+
+# Lighthouse reports
+/lighthouse-reports
+lighthouse-report.html
+*.lighthouse.json
