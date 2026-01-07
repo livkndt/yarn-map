@@ -13,6 +13,12 @@ if (!connectionString) {
   throw new Error('DATABASE_URL is not set');
 }
 
+// Log database connection info in development (without exposing credentials)
+if (process.env.NODE_ENV === 'development') {
+  const dbInfo = connectionString.replace(/:\/\/[^:]+:[^@]+@/, '://***:***@');
+  console.log('[DB] Connecting to:', dbInfo);
+}
+
 // Create a connection pool with limits for security and stability
 const pool =
   globalForPrisma.pool ??
