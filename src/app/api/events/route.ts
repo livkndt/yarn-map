@@ -163,18 +163,18 @@ export async function GET(request: NextRequest) {
       offset,
     });
 
-    // Disable caching when user-selected filters are present to avoid stale filtered results
-    // Location and search filters should always return fresh data
+    // Use very short cache for filtered queries to balance performance and freshness
+    // Different query params will get different cache entries via Vary header
     const hasUserFilters = location || search || startDate || endDate;
 
     if (hasUserFilters) {
-      // No caching for filtered queries to ensure fresh results
+      // Very short cache (1 second) for filtered queries - prevents stale data but allows rapid filter changes
       response.headers.set(
         'Cache-Control',
-        'no-store, no-cache, must-revalidate',
+        'public, s-maxage=1, stale-while-revalidate=2',
       );
-      // Ensure different query params get different cache entries
-      response.headers.set('Vary', 'Accept, Accept-Encoding');
+      // Vary on query string to ensure different regions get different cache entries
+      response.headers.set('Vary', 'Accept, Accept-Encoding, X-Requested-With');
     } else {
       // Light caching for default queries (upcoming events without location/search filters)
       response.headers.set(
