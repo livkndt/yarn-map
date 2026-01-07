@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { Calendar, MapPin, Search, Filter, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -72,6 +72,7 @@ export function EventsDirectory({
   } | null>(null);
   const [submissionModalOpen, setSubmissionModalOpen] = useState(false);
   const isInitialMount = useRef(true);
+  const hasFetchedRef = useRef(false);
 
   // Filters
   const [upcoming, setUpcoming] = useState(true);
@@ -80,7 +81,8 @@ export function EventsDirectory({
   const [offset, setOffset] = useState(0);
   const limit = 20;
 
-  const fetchEvents = async () => {
+  // Memoize fetchEvents to prevent stale closures and ensure proper dependencies
+  const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -106,7 +108,20 @@ export function EventsDirectory({
       const data = await response.json();
 
       if (response.ok) {
-        setEvents(data.events);
+        // Ensure dates are properly serialized as ISO strings
+        const normalizedEvents = data.events.map((event: any) => ({
+          ...event,
+          startDate:
+            typeof event.startDate === 'string'
+              ? event.startDate
+              : new Date(event.startDate).toISOString(),
+          endDate: event.endDate
+            ? typeof event.endDate === 'string'
+              ? event.endDate
+              : new Date(event.endDate).toISOString()
+            : null,
+        }));
+        setEvents(normalizedEvents);
         setTotal(data.total);
       }
     } catch (error) {
@@ -114,26 +129,56 @@ export function EventsDirectory({
     } finally {
       setLoading(false);
     }
-  };
+  }, [upcoming, location, offset, search, limit]);
 
   // Memoize the events display to prevent unnecessary re-renders
   const displayEvents = useMemo(() => events, [events]);
 
   useEffect(() => {
-    // Skip initial fetch if we have initial data
+    // Skip initial fetch if we have initial data on first mount only
     if (isInitialMount.current && initialEvents.length > 0) {
       isInitialMount.current = false;
+      hasFetchedRef.current = false;
       return;
     }
     isInitialMount.current = false;
+    hasFetchedRef.current = true;
     fetchEvents();
-  }, [upcoming, location, offset]);
+  }, [fetchEvents]);
 
+  // Refresh events when page becomes visible again (e.g., navigating back)
+  // This helps ensure data is fresh when returning from calendar view
   useEffect(() => {
-    // Debounce search
+    let refreshTimer: NodeJS.Timeout | null = null;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && hasFetchedRef.current) {
+        // Debounce to avoid multiple rapid refreshes
+        if (refreshTimer) clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(() => {
+          fetchEvents();
+        }, 100);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (refreshTimer) clearTimeout(refreshTimer);
+    };
+  }, [fetchEvents]);
+
+  // Separate effect for search debouncing
+  useEffect(() => {
+    // Skip debounce on initial mount if we have initial data
+    if (isInitialMount.current && initialEvents.length > 0) {
+      return;
+    }
+
+    // Debounce search - reset offset and let the main effect handle the fetch
     const timer = setTimeout(() => {
       setOffset(0);
-      fetchEvents();
     }, 500);
 
     return () => clearTimeout(timer);

@@ -165,8 +165,45 @@ export async function GET(request: NextRequest) {
       db.event.count({ where }),
     ]);
 
+    // Ensure dates are properly serialized as ISO strings
+    const serializedEvents = events.map((event) => {
+      const serialized: any = { ...event };
+
+      if (event.startDate) {
+        serialized.startDate =
+          event.startDate instanceof Date
+            ? event.startDate.toISOString()
+            : event.startDate;
+      }
+
+      if (event.endDate !== undefined && event.endDate !== null) {
+        serialized.endDate =
+          event.endDate instanceof Date
+            ? event.endDate.toISOString()
+            : event.endDate;
+      } else {
+        serialized.endDate = null;
+      }
+
+      if (event.createdAt) {
+        serialized.createdAt =
+          event.createdAt instanceof Date
+            ? event.createdAt.toISOString()
+            : event.createdAt;
+      }
+
+      if (event.updatedAt) {
+        serialized.updatedAt =
+          event.updatedAt instanceof Date
+            ? event.updatedAt.toISOString()
+            : event.updatedAt;
+      }
+
+      return serialized;
+    });
+
     const response = NextResponse.json({
-      events,
+      events: serializedEvents,
       total,
       limit,
       offset,
