@@ -25,34 +25,57 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        const email = String(credentials.email);
+        const password = String(credentials.password);
+
+        const adminEmail = process.env.ADMIN_EMAIL;
         const adminPassword = process.env.ADMIN_PASSWORD;
+
+        if (!adminEmail) {
+          logger.error('ADMIN_EMAIL not configured');
+          throw new Error('ADMIN_EMAIL not configured');
+        }
+
         if (!adminPassword) {
           logger.error('ADMIN_PASSWORD not configured');
           throw new Error('ADMIN_PASSWORD not configured');
         }
 
-        // Simple password check - in production, use proper hashing
-        if (credentials.password === adminPassword) {
-          logger.info('Admin login successful', { email: credentials.email });
+        // Check that email matches the configured admin email (case-insensitive)
+        const emailMatches =
+          email.toLowerCase().trim() === adminEmail.toLowerCase().trim();
+
+        // Check that password matches
+        const passwordMatches = password === adminPassword;
+
+        // Both email and password must match
+        if (emailMatches && passwordMatches) {
+          logger.info('Admin login successful', { email });
 
           await logAudit({
             action: 'auth.login_success',
             userId: 'admin',
-            metadata: { email: credentials.email },
+            metadata: { email },
           });
 
           return {
             id: 'admin',
-            email: credentials.email as string,
+            email,
             name: 'Admin',
           };
         }
 
-        logger.warn('Admin login failed', { email: credentials.email });
+        logger.warn('Admin login failed', {
+          email,
+          reason: emailMatches ? 'invalid_password' : 'invalid_email',
+        });
 
         await logAudit({
           action: 'auth.login_failure',
-          metadata: { email: credentials.email },
+          metadata: {
+            email,
+            reason: emailMatches ? 'invalid_password' : 'invalid_email',
+          },
         });
 
         return null;

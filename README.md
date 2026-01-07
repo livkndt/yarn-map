@@ -118,7 +118,7 @@ Public API routes are rate-limited per IP address to prevent abuse and scraping:
 ### 4. Admin Protection
 
 - Admin routes are protected by NextAuth.js v5 with JWT sessions.
-- Credentials-based login with a configurable `ADMIN_PASSWORD`.
+- Credentials-based login with configurable `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
 - CSRF protection is built-in for Server Actions and NextAuth routes.
 
 ### 5. Monitoring & Logging
@@ -189,7 +189,8 @@ NEXTAUTH_SECRET="your-secret-key-here"
 # Application URL
 NEXTAUTH_URL="http://localhost:3000"
 
-# Admin password for authentication
+# Admin email and password for authentication
+ADMIN_EMAIL="admin@yarnmap.com"
 ADMIN_PASSWORD="your-secure-admin-password-here"
 ```
 
@@ -334,8 +335,10 @@ src/
 The admin section is protected with NextAuth.js v5 using a credentials provider. To access the admin dashboard:
 
 1. Navigate to `/admin`
-2. Enter any email address
+2. Enter the email address set in `ADMIN_EMAIL` environment variable
 3. Enter the password set in `ADMIN_PASSWORD` environment variable
+
+Both the email and password must match the configured values. The email check is case-insensitive.
 
 **Note**: In production, consider implementing proper user management with hashed passwords and user accounts in the database.
 
@@ -420,7 +423,12 @@ Go to your Netlify site **Site settings** → **Environment variables** and add:
    - For Local development: `http://localhost:3000`
    - **Note**: Make sure there's no trailing slash in the URL
 
-4. **`ADMIN_PASSWORD`**
+4. **`ADMIN_EMAIL`**
+   - Set the email address for admin login
+   - This is the email you'll use to access `/admin`
+   - Add it for all scopes
+
+5. **`ADMIN_PASSWORD`**
    - Set a secure password for admin login
    - This is the password you'll use to access `/admin`
    - Add it for all scopes
@@ -510,7 +518,7 @@ The project is configured for Netlify deployment via `netlify.toml`:
 
 - Verify `AUTH_SECRET` (or `NEXTAUTH_SECRET`) is set in Netlify environment variables
 - Check that `AUTH_URL` (or `NEXTAUTH_URL`) matches your deployment URL exactly (no trailing slash)
-- Ensure `ADMIN_PASSWORD` is set
+- Ensure `ADMIN_EMAIL` and `ADMIN_PASSWORD` are set
 - Make sure `trustHost: true` is in your NextAuth config (already added in `src/lib/auth.ts`)
 - Clear browser cookies and try again if authentication seems stuck
 
