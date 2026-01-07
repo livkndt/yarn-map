@@ -17,6 +17,7 @@ model Event {
   endDate     DateTime? @map("end_date")
   location    String
   address     String
+  region      String?
   latitude    Float?
   longitude   Float?
   website     String?
@@ -26,6 +27,7 @@ model Event {
 
   @@index([startDate])
   @@index([location])
+  @@index([region])
   @@index([createdAt])
   @@map("events")
 }
@@ -37,6 +39,7 @@ model Shop {
   address     String
   city        String
   postcode    String
+  region      String?
   latitude    Float?
   longitude   Float?
   website     String?
@@ -47,6 +50,7 @@ model Shop {
 
   @@index([city])
   @@index([postcode])
+  @@index([region])
   @@index([createdAt])
   @@map("shops")
 }
