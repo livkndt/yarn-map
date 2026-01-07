@@ -163,11 +163,26 @@ export async function GET(request: NextRequest) {
       offset,
     });
 
-    // Reduced cache time to ensure fresh data, but still allow bfcache
-    response.headers.set(
-      'Cache-Control',
-      'public, s-maxage=10, stale-while-revalidate=30',
-    );
+    // Disable caching when user-selected filters are present to avoid stale filtered results
+    // Location and search filters should always return fresh data
+    const hasUserFilters = location || search || startDate || endDate;
+
+    if (hasUserFilters) {
+      // No caching for filtered queries to ensure fresh results
+      response.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate',
+      );
+      // Ensure different query params get different cache entries
+      response.headers.set('Vary', 'Accept, Accept-Encoding');
+    } else {
+      // Light caching for default queries (upcoming events without location/search filters)
+      response.headers.set(
+        'Cache-Control',
+        'public, s-maxage=10, stale-while-revalidate=30',
+      );
+      response.headers.set('Vary', 'Accept, Accept-Encoding');
+    }
 
     return response;
   } catch (error) {

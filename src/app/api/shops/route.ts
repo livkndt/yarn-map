@@ -86,11 +86,26 @@ export async function GET(request: NextRequest) {
       offset,
     });
 
-    // Reduced cache time to ensure fresh data, but still allow bfcache
-    response.headers.set(
-      'Cache-Control',
-      'public, s-maxage=10, stale-while-revalidate=30',
-    );
+    // Disable caching when filters are present to avoid stale filtered results
+    // Only cache when no filters are applied (default list view)
+    const hasFilters = city || region || search;
+
+    if (hasFilters) {
+      // No caching for filtered queries to ensure fresh results
+      response.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate',
+      );
+      // Ensure different query params get different cache entries
+      response.headers.set('Vary', 'Accept, Accept-Encoding');
+    } else {
+      // Light caching for unfiltered default queries
+      response.headers.set(
+        'Cache-Control',
+        'public, s-maxage=10, stale-while-revalidate=30',
+      );
+      response.headers.set('Vary', 'Accept, Accept-Encoding');
+    }
 
     return response;
   } catch (error) {
