@@ -233,11 +233,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Rate limiting for admin actions
-    const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
-    const identifier = `admin:event:create:${ip}`;
-    const rateLimit = await checkRateLimit(identifier, 'veryStrict');
+    // Rate limiting for admin actions - use user ID instead of IP for better limits
+    const userId = session.user?.id || 'unknown';
+    const identifier = `admin:event:create:${userId}`;
+    const rateLimit = await checkRateLimit(identifier, 'admin');
 
     if (!rateLimit.success) {
       return NextResponse.json(

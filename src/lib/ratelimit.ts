@@ -29,6 +29,13 @@ const veryStrictRatelimit = new Ratelimit({
   prefix: 'ratelimit:very_strict',
 });
 
+const adminRatelimit = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.fixedWindow(50, '1h'), // 50 requests per hour for admin actions
+  analytics: true,
+  prefix: 'ratelimit:admin',
+});
+
 interface RateLimitConfig {
   limiter: Ratelimit;
   maxRequests: number;
@@ -39,11 +46,12 @@ const rateLimitConfigs: Record<string, RateLimitConfig> = {
   default: { limiter: defaultRatelimit, maxRequests: 100, window: '1h' },
   strict: { limiter: strictRatelimit, maxRequests: 5, window: '1h' },
   veryStrict: { limiter: veryStrictRatelimit, maxRequests: 2, window: '1h' },
+  admin: { limiter: adminRatelimit, maxRequests: 50, window: '1h' },
 };
 
 export async function checkRateLimit(
   identifier: string,
-  type: 'default' | 'strict' | 'veryStrict' = 'default',
+  type: 'default' | 'strict' | 'veryStrict' | 'admin' = 'default',
 ): Promise<{
   success: boolean;
   remaining: number;
