@@ -73,6 +73,7 @@ export function EventsDirectory({
   const [submissionModalOpen, setSubmissionModalOpen] = useState(false);
   const isInitialMount = useRef(true);
   const hasFetchedRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Filters
   const [upcoming, setUpcoming] = useState(true);
@@ -83,6 +84,15 @@ export function EventsDirectory({
 
   // Memoize fetchEvents to prevent stale closures and ensure proper dependencies
   const fetchEvents = useCallback(async () => {
+    // Cancel any in-flight requests to prevent race conditions
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create a new AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -104,10 +114,17 @@ export function EventsDirectory({
 
       const response = await fetch(`/api/events?${params.toString()}`, {
         cache: 'no-store', // Always fetch fresh data to avoid stale cache
+        signal: abortController.signal, // Allow cancellation
       });
+
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && !abortController.signal.aborted) {
         // Ensure dates are properly serialized as ISO strings
         const normalizedEvents = data.events.map((event: any) => ({
           ...event,
@@ -124,10 +141,17 @@ export function EventsDirectory({
         setEvents(normalizedEvents);
         setTotal(data.total);
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Ignore abort errors
+      if (error.name === 'AbortError') {
+        return;
+      }
       console.error('Error fetching events:', error);
     } finally {
-      setLoading(false);
+      // Only set loading to false if this request wasn't aborted
+      if (!abortController.signal.aborted) {
+        setLoading(false);
+      }
     }
   }, [upcoming, location, offset, search, limit]);
 
@@ -166,6 +190,10 @@ export function EventsDirectory({
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (refreshTimer) clearTimeout(refreshTimer);
+      // Cleanup: abort any pending requests when component unmounts
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, [fetchEvents]);
 
@@ -257,6 +285,9 @@ export function EventsDirectory({
               onValueChange={(value) => {
                 setLocation(value);
                 setOffset(0); // Reset to first page when location changes
+                // Clear events immediately to prevent showing stale data
+                setEvents([]);
+                setTotal(0);
               }}
             >
               <SelectTrigger className="w-full md:w-[200px]">
