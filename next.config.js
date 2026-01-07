@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Production optimizations
+  productionBrowserSourceMaps: false, // Disable source maps in production for smaller bundles
   compiler: {
     // Remove console.log in production
     removeConsole:

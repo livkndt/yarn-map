@@ -22,6 +22,7 @@
     "db:seed": "dotenv -e .env tsx prisma/seed.ts",
     "fetch-shops": "tsx scripts/fetch-yarn-shops.ts",
     "lighthouse": "lighthouse http://localhost:3000 --output html --output-path ./lighthouse-report.html --view",
+    "lighthouse:prod": "npm run build && npm run start & sleep 10 && lighthouse http://localhost:3000 --output html --output-path ./lighthouse-report.html --view && pkill -f 'next start'",
     "lighthouse:ci": "lhci autorun",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",

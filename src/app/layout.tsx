@@ -20,6 +20,14 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: 'Yarn Map - UK Fiber Arts Directory',
   description: 'Find fiber arts events and yarn shops across the UK',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', type: 'image/x-icon' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({
