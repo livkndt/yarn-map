@@ -207,7 +207,13 @@ export function EventsDirectory({
                 />
               </div>
             </div>
-            <Select value={location} onValueChange={setLocation}>
+            <Select
+              value={location}
+              onValueChange={(value) => {
+                setLocation(value);
+                setOffset(0); // Reset to first page when location changes
+              }}
+            >
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Region" />
               </SelectTrigger>

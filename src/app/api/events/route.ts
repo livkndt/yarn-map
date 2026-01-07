@@ -65,10 +65,73 @@ export async function GET(request: NextRequest) {
     }
 
     if (location) {
-      where.location = {
-        contains: location,
-        mode: 'insensitive',
+      // Map region names to cities for better filtering
+      const regionCities: Record<string, string[]> = {
+        London: ['London'],
+        Scotland: [
+          'Edinburgh',
+          'Glasgow',
+          'Aberdeen',
+          'Dundee',
+          'Inverness',
+          'Stirling',
+          'Perth',
+        ],
+        'Northern Ireland': ['Belfast', 'Derry', 'Lisburn', 'Newry'],
+        Wales: ['Cardiff', 'Swansea', 'Newport', 'Wrexham', 'Bangor'],
+        North: [
+          'Manchester',
+          'Liverpool',
+          'Leeds',
+          'Sheffield',
+          'Newcastle',
+          'York',
+          'Hull',
+          'Bradford',
+          'Blackpool',
+          'Preston',
+          'Lancaster',
+          'Carlisle',
+        ],
+        Midlands: [
+          'Birmingham',
+          'Coventry',
+          'Leicester',
+          'Nottingham',
+          'Derby',
+          'Wolverhampton',
+          'Stoke-on-Trent',
+          'Northampton',
+        ],
+        South: [
+          'Brighton',
+          'Southampton',
+          'Portsmouth',
+          'Oxford',
+          'Cambridge',
+          'Reading',
+          'Bristol',
+          'Bath',
+          'Canterbury',
+          'Guildford',
+          'Maidstone',
+          'Colchester',
+        ],
       };
+
+      const cities = regionCities[location];
+      if (cities) {
+        // If it's a region, search for any of the cities in that region
+        where.location = {
+          in: cities,
+        };
+      } else {
+        // If it's a direct city name, use contains search
+        where.location = {
+          contains: location,
+          mode: 'insensitive',
+        };
+      }
     }
 
     if (search) {

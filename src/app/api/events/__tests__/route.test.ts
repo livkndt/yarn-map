@@ -88,7 +88,7 @@ describe('Events API Route', () => {
       );
     });
 
-    it('should filter by location', async () => {
+    it('should filter by location (region)', async () => {
       (mockDb.event.findMany as jest.Mock).mockResolvedValue([]);
       (mockDb.event.count as jest.Mock).mockResolvedValue(0);
 
@@ -97,12 +97,63 @@ describe('Events API Route', () => {
       );
       await GET(request);
 
+      // London is a region, so it should use 'in' operator with array of cities
       expect(mockDb.event.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             location: expect.objectContaining({
-              contains: 'London',
+              in: ['London'],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('should filter by location (city name)', async () => {
+      (mockDb.event.findMany as jest.Mock).mockResolvedValue([]);
+      (mockDb.event.count as jest.Mock).mockResolvedValue(0);
+
+      const request = new NextRequest(
+        'http://localhost/api/events?location=Manchester',
+      );
+      await GET(request);
+
+      // Manchester is not a region, so it should use 'contains' search
+      expect(mockDb.event.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            location: expect.objectContaining({
+              contains: 'Manchester',
               mode: 'insensitive',
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('should filter by location (Scotland region)', async () => {
+      (mockDb.event.findMany as jest.Mock).mockResolvedValue([]);
+      (mockDb.event.count as jest.Mock).mockResolvedValue(0);
+
+      const request = new NextRequest(
+        'http://localhost/api/events?location=Scotland',
+      );
+      await GET(request);
+
+      // Scotland is a region, so it should use 'in' operator with Scottish cities
+      expect(mockDb.event.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            location: expect.objectContaining({
+              in: expect.arrayContaining([
+                'Edinburgh',
+                'Glasgow',
+                'Aberdeen',
+                'Dundee',
+                'Inverness',
+                'Stirling',
+                'Perth',
+              ]),
             }),
           }),
         }),
