@@ -102,12 +102,20 @@ export async function GET(request: NextRequest) {
       db.event.count({ where }),
     ]);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       events,
       total,
       limit,
       offset,
     });
+
+    // Allow caching for bfcache compatibility
+    response.headers.set(
+      'Cache-Control',
+      'public, s-maxage=60, stale-while-revalidate=300',
+    );
+
+    return response;
   } catch (error) {
     logger.error('Error fetching events', error);
     return NextResponse.json(

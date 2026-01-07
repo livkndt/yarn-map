@@ -74,12 +74,20 @@ export async function GET(request: NextRequest) {
       db.shop.count({ where }),
     ]);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       shops,
       total,
       limit,
       offset,
     });
+
+    // Allow caching for bfcache compatibility
+    response.headers.set(
+      'Cache-Control',
+      'public, s-maxage=60, stale-while-revalidate=300',
+    );
+
+    return response;
   } catch (error) {
     logger.error('Error fetching shops', error);
     return NextResponse.json(

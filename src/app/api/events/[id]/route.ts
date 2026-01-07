@@ -47,7 +47,15 @@ export async function GET(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    return NextResponse.json(event);
+    const response = NextResponse.json(event);
+
+    // Allow caching for bfcache compatibility
+    response.headers.set(
+      'Cache-Control',
+      'public, s-maxage=60, stale-while-revalidate=300',
+    );
+
+    return response;
   } catch (error) {
     logger.error('Error fetching event', error);
     return NextResponse.json(

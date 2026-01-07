@@ -49,7 +49,15 @@ export async function GET(
       return NextResponse.json({ error: 'Shop not found' }, { status: 404 });
     }
 
-    return NextResponse.json(shop);
+    const response = NextResponse.json(shop);
+
+    // Allow caching for bfcache compatibility
+    response.headers.set(
+      'Cache-Control',
+      'public, s-maxage=60, stale-while-revalidate=300',
+    );
+
+    return response;
   } catch (error) {
     console.error('Error fetching shop:', error);
     return NextResponse.json(
