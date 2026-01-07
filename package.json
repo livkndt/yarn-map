@@ -18,6 +18,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:prod": "DATABASE_URL='$(netlify env:get DATABASE_URL)' npx prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "dotenv -e .env tsx prisma/seed.ts",
     "fetch-shops": "tsx scripts/fetch-yarn-shops.ts",

@@ -97,13 +97,11 @@ describe('Events API Route', () => {
       );
       await GET(request);
 
-      // London is a region, so it should use 'in' operator with array of cities
+      // London is a known region, so it should filter by the region field
       expect(mockDb.event.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            location: expect.objectContaining({
-              in: ['London'],
-            }),
+            region: 'London',
           }),
         }),
       );
@@ -140,21 +138,11 @@ describe('Events API Route', () => {
       );
       await GET(request);
 
-      // Scotland is a region, so it should use 'in' operator with Scottish cities
+      // Scotland is a known region, so it should filter by the region field
       expect(mockDb.event.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            location: expect.objectContaining({
-              in: expect.arrayContaining([
-                'Edinburgh',
-                'Glasgow',
-                'Aberdeen',
-                'Dundee',
-                'Inverness',
-                'Stirling',
-                'Perth',
-              ]),
-            }),
+            region: 'Scotland',
           }),
         }),
       );

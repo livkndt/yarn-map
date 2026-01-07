@@ -95,7 +95,7 @@ export function ShopsDirectory({
 
   // Filters
   const [search, setSearch] = useState('');
-  const [city, setCity] = useState('All Regions');
+  const [region, setRegion] = useState('All Regions');
   const [offset, setOffset] = useState(0);
   const limit = 100;
 
@@ -107,8 +107,8 @@ export function ShopsDirectory({
         offset: offset.toString(),
       });
 
-      if (city && city !== 'All Regions') {
-        params.append('city', city);
+      if (region && region !== 'All Regions') {
+        params.append('region', region);
       }
 
       if (search) {
@@ -139,7 +139,7 @@ export function ShopsDirectory({
     }
     isInitialMount.current = false;
     fetchShops();
-  }, [city, offset]);
+  }, [region, offset]);
 
   useEffect(() => {
     // Debounce search
@@ -252,14 +252,14 @@ export function ShopsDirectory({
             />
           </div>
         </div>
-        <Select value={city} onValueChange={setCity}>
+        <Select value={region} onValueChange={setRegion}>
           <SelectTrigger className="w-full md:w-[200px]">
             <SelectValue placeholder="Region" />
           </SelectTrigger>
           <SelectContent>
-            {UK_REGIONS.map((region) => (
-              <SelectItem key={region} value={region}>
-                {region}
+            {UK_REGIONS.map((regionOption) => (
+              <SelectItem key={regionOption} value={regionOption}>
+                {regionOption}
               </SelectItem>
             ))}
           </SelectContent>

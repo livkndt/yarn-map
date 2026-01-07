@@ -42,13 +42,18 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const city = searchParams.get('city');
+    const region = searchParams.get('region');
     const search = searchParams.get('search');
     const limit = parseInt(searchParams.get('limit') || '100', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     const where: any = {};
 
-    if (city) {
+    // Filter by region if provided (takes precedence over city)
+    if (region && region !== 'All Regions') {
+      where.region = region;
+    } else if (city && city !== 'All Regions') {
+      // Fall back to city filtering if region not provided
       where.city = {
         contains: city,
         mode: 'insensitive',

@@ -65,68 +65,22 @@ export async function GET(request: NextRequest) {
     }
 
     if (location) {
-      // Map region names to cities for better filtering
-      const regionCities: Record<string, string[]> = {
-        London: ['London'],
-        Scotland: [
-          'Edinburgh',
-          'Glasgow',
-          'Aberdeen',
-          'Dundee',
-          'Inverness',
-          'Stirling',
-          'Perth',
-        ],
-        'Northern Ireland': ['Belfast', 'Derry', 'Lisburn', 'Newry'],
-        Wales: ['Cardiff', 'Swansea', 'Newport', 'Wrexham', 'Bangor'],
-        North: [
-          'Manchester',
-          'Liverpool',
-          'Leeds',
-          'Sheffield',
-          'Newcastle',
-          'York',
-          'Hull',
-          'Bradford',
-          'Blackpool',
-          'Preston',
-          'Lancaster',
-          'Carlisle',
-        ],
-        Midlands: [
-          'Birmingham',
-          'Coventry',
-          'Leicester',
-          'Nottingham',
-          'Derby',
-          'Wolverhampton',
-          'Stoke-on-Trent',
-          'Northampton',
-        ],
-        South: [
-          'Brighton',
-          'Southampton',
-          'Portsmouth',
-          'Oxford',
-          'Cambridge',
-          'Reading',
-          'Bristol',
-          'Bath',
-          'Canterbury',
-          'Guildford',
-          'Maidstone',
-          'Colchester',
-        ],
-      };
+      // Check if it's a known region name
+      const knownRegions = [
+        'London',
+        'Scotland',
+        'Northern Ireland',
+        'Wales',
+        'North',
+        'Midlands',
+        'South',
+      ];
 
-      const cities = regionCities[location];
-      if (cities) {
-        // If it's a region, search for any of the cities in that region
-        where.location = {
-          in: cities,
-        };
+      if (knownRegions.includes(location)) {
+        // Filter by region field from database
+        where.region = location;
       } else {
-        // If it's a direct city name, use contains search
+        // If it's not a region, filter by location (city name)
         where.location = {
           contains: location,
           mode: 'insensitive',
