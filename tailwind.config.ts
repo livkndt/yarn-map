@@ -17,11 +17,11 @@ const config: Config = {
           foreground: '#ffffff',
         },
         secondary: {
-          DEFAULT: '#D4816B',
+          DEFAULT: '#A85A3F',
           foreground: '#ffffff',
         },
         accent: {
-          DEFAULT: '#D4816B',
+          DEFAULT: '#A85A3F',
           foreground: '#ffffff',
         },
         muted: {

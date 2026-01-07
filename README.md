@@ -562,7 +562,7 @@ npm run test:coverage # Run tests with coverage report
 
 - **Background**: Cream (#FDF6F0)
 - **Primary**: Deep Teal (#0F6B6B)
-- **Secondary/Accent**: Terracotta (#D4816B)
+- **Secondary/Accent**: Terracotta (#A85A3F)
 - **Foreground**: Dark Gray (#1a1a1a)
 
 ### Typography
