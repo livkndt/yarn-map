@@ -20,19 +20,28 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Create a connection pool with limits for security and stability
-const pool =
-  globalForPrisma.pool ??
-  new Pool({
-    connectionString,
-    max: 10, // Maximum number of clients in the pool
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000, // Slightly longer timeout for resilience
-    allowExitOnIdle: true, // Allow the process to exit if the pool is idle
-  });
+// Optimized for production performance
+const poolConfig: any = {
+  connectionString,
+  max: process.env.NODE_ENV === 'production' ? 20 : 10, // More connections in production
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: process.env.NODE_ENV === 'production' ? 10000 : 5000, // Longer timeout in production for network latency
+  allowExitOnIdle: true, // Allow the process to exit if the pool is idle
+};
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.pool = pool;
+// Only add SSL config if connection string doesn't already specify it
+// Most production DBs include SSL in the connection string (e.g., ?sslmode=require)
+if (
+  process.env.NODE_ENV === 'production' &&
+  !connectionString.includes('sslmode')
+) {
+  poolConfig.ssl = { rejectUnauthorized: false };
 }
+
+const pool = globalForPrisma.pool ?? new Pool(poolConfig);
+
+// Reuse pool in all environments for better performance
+globalForPrisma.pool = pool;
 
 const adapter = new PrismaPg(pool);
 
@@ -46,4 +55,5 @@ export const db =
         : ['error'],
   });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db;
+// Reuse db instance in all environments for better performance
+globalForPrisma.prisma = db;
