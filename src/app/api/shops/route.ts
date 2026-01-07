@@ -86,18 +86,21 @@ export async function GET(request: NextRequest) {
       offset,
     });
 
-    // Use very short cache for filtered queries to balance performance and freshness
-    // Different query params will get different cache entries via Vary header
+    // Disable CDN caching for filtered queries to prevent stale data issues
+    // This is critical for production where CDN caching can serve wrong responses
     const hasFilters = city || region || search;
 
     if (hasFilters) {
-      // Very short cache (1 second) for filtered queries - prevents stale data but allows rapid filter changes
+      // No caching for filtered queries - prevents CDN from serving stale filtered results
+      // This ensures users always get the correct filtered data, especially after changing filters
       response.headers.set(
         'Cache-Control',
-        'public, s-maxage=1, stale-while-revalidate=2',
+        'no-store, no-cache, must-revalidate',
       );
-      // Vary on query string to ensure different regions get different cache entries
-      response.headers.set('Vary', 'Accept, Accept-Encoding, X-Requested-With');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+      // Vary header helps but CDN caching is disabled above for safety
+      response.headers.set('Vary', 'Accept, Accept-Encoding');
     } else {
       // Light caching for unfiltered default queries
       response.headers.set(

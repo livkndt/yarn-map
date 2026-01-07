@@ -8,18 +8,24 @@ import { SubmissionSection } from './submission-section';
 export const revalidate = 60;
 
 async function getStats() {
-  const [upcomingEventsCount, shopsCount] = await Promise.all([
-    db.event.count({
-      where: {
-        startDate: {
-          gte: new Date(),
+  try {
+    const [upcomingEventsCount, shopsCount] = await Promise.all([
+      db.event.count({
+        where: {
+          startDate: {
+            gte: new Date(),
+          },
         },
-      },
-    }),
-    db.shop.count(),
-  ]);
+      }),
+      db.shop.count(),
+    ]);
 
-  return { upcomingEventsCount, shopsCount };
+    return { upcomingEventsCount, shopsCount };
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    // Return default values if database connection fails (e.g., during build)
+    return { upcomingEventsCount: 0, shopsCount: 0 };
+  }
 }
 
 export default async function HomePage() {

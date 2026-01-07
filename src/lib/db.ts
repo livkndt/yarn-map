@@ -31,8 +31,15 @@ const poolConfig: any = {
 
 // Only add SSL config if connection string doesn't already specify it
 // Most production DBs include SSL in the connection string (e.g., ?sslmode=require)
+// Only enable SSL for remote databases (not localhost) to avoid build-time errors
+const isRemoteDatabase =
+  !connectionString.includes('localhost') &&
+  !connectionString.includes('127.0.0.1') &&
+  !connectionString.includes('postgresql://postgres@');
+
 if (
   process.env.NODE_ENV === 'production' &&
+  isRemoteDatabase &&
   !connectionString.includes('sslmode')
 ) {
   poolConfig.ssl = { rejectUnauthorized: false };

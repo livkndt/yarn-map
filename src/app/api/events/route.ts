@@ -56,6 +56,19 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
+    // Debug logging (only in development or when DEBUG env var is set)
+    if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+      logger.info('Events API request', {
+        upcoming,
+        location,
+        search,
+        limit,
+        offset,
+        startDate,
+        endDate,
+      });
+    }
+
     const where: any = {};
 
     if (upcoming) {
@@ -79,12 +92,21 @@ export async function GET(request: NextRequest) {
       if (knownRegions.includes(location)) {
         // Filter by region field from database
         where.region = location;
+        // Always log in production to help debug filtering issues
+        logger.info('Filtering by region', {
+          region: location,
+          whereClause: JSON.stringify(where),
+        });
       } else {
         // If it's not a region, filter by location (city name)
         where.location = {
           contains: location,
           mode: 'insensitive',
         };
+        logger.info('Filtering by location (city)', {
+          location,
+          whereClause: JSON.stringify(where),
+        });
       }
     }
 
@@ -109,6 +131,13 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // Always log in production to help debug filtering issues
+    logger.info('Database query', {
+      where: JSON.stringify(where),
+      limit,
+      offset,
+    });
+
     const [events, total] = await Promise.all([
       db.event.findMany({
         where,
@@ -118,6 +147,14 @@ export async function GET(request: NextRequest) {
       }),
       db.event.count({ where }),
     ]);
+
+    // Always log results in production to help debug
+    logger.info('Database query results', {
+      eventsCount: events.length,
+      total,
+      eventRegions: events.map((e) => e.region),
+      eventIds: events.map((e) => e.id),
+    });
 
     // Ensure dates are properly serialized as ISO strings
     const serializedEvents = events.map((event) => {
@@ -163,18 +200,21 @@ export async function GET(request: NextRequest) {
       offset,
     });
 
-    // Use very short cache for filtered queries to balance performance and freshness
-    // Different query params will get different cache entries via Vary header
+    // Disable CDN caching for filtered queries to prevent stale data issues
+    // This is critical for production where CDN caching can serve wrong responses
     const hasUserFilters = location || search || startDate || endDate;
 
     if (hasUserFilters) {
-      // Very short cache (1 second) for filtered queries - prevents stale data but allows rapid filter changes
+      // No caching for filtered queries - prevents CDN from serving stale filtered results
+      // This ensures users always get the correct filtered data, especially after changing filters
       response.headers.set(
         'Cache-Control',
-        'public, s-maxage=1, stale-while-revalidate=2',
+        'no-store, no-cache, must-revalidate',
       );
-      // Vary on query string to ensure different regions get different cache entries
-      response.headers.set('Vary', 'Accept, Accept-Encoding, X-Requested-With');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+      // Vary header helps but CDN caching is disabled above for safety
+      response.headers.set('Vary', 'Accept, Accept-Encoding');
     } else {
       // Light caching for default queries (upcoming events without location/search filters)
       response.headers.set(

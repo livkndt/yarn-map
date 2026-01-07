@@ -112,17 +112,32 @@ export function EventsDirectory({
         params.append('search', search);
       }
 
-      const response = await fetch(`/api/events?${params.toString()}`, {
+      const url = `/api/events?${params.toString()}`;
+      console.log('[EventsDirectory] Fetching:', url, {
+        location,
+        upcoming,
+        search,
+        offset,
+      });
+
+      const response = await fetch(url, {
         cache: 'no-store', // Always fetch fresh data to avoid stale cache
         signal: abortController.signal, // Allow cancellation
       });
 
       // Check if request was aborted
       if (abortController.signal.aborted) {
+        console.log('[EventsDirectory] Request aborted');
         return;
       }
 
       const data = await response.json();
+      console.log('[EventsDirectory] Response:', {
+        url,
+        eventsCount: data.events?.length,
+        total: data.total,
+        location,
+      });
 
       if (response.ok && !abortController.signal.aborted) {
         // Ensure dates are properly serialized as ISO strings
@@ -138,6 +153,11 @@ export function EventsDirectory({
               : new Date(event.endDate).toISOString()
             : null,
         }));
+        console.log(
+          '[EventsDirectory] Setting events:',
+          normalizedEvents.length,
+          'events',
+        );
         setEvents(normalizedEvents);
         setTotal(data.total);
       }
