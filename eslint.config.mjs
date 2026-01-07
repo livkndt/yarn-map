@@ -43,6 +43,7 @@ export default [
   },
   {
     files: ['**/*.{ts,tsx}'],
+    ignores: ['**/__tests__/**', '**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
     languageOptions: {
       parser: tsparser,
       ecmaVersion: 'latest',
@@ -68,8 +69,11 @@ export default [
     },
   },
   {
-    files: ['**/__tests__/**', '**/*.test.{js,jsx,ts,tsx}'],
+    files: ['**/__tests__/**', '**/*.test.{js,jsx,ts,tsx}', '**/*.spec.{js,jsx,ts,tsx}'],
     languageOptions: {
+      parser: tsparser,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       globals: {
         jest: 'readonly',
         describe: 'readonly',
@@ -81,6 +85,19 @@ export default [
         beforeAll: 'readonly',
         afterAll: 'readonly',
       },
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+        // Don't use project for test files since they're excluded from tsconfig.json
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'warn',
+      'no-undef': 'off', // TypeScript handles this
     },
   },
 ];
