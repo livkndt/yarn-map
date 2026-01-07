@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { MapPin, Search, List, Map as MapIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,10 +65,18 @@ const UK_REGIONS = [
   'London',
 ];
 
-export function ShopsDirectory() {
-  const [shops, setShops] = useState<Shop[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
+interface ShopsDirectoryProps {
+  initialShops?: Shop[];
+  initialTotal?: number;
+}
+
+export function ShopsDirectory({
+  initialShops = [],
+  initialTotal = 0,
+}: ShopsDirectoryProps) {
+  const [shops, setShops] = useState<Shop[]>(initialShops);
+  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(initialTotal);
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const [highlightedShopId, setHighlightedShopId] = useState<string | null>(
     null,
@@ -83,6 +91,7 @@ export function ShopsDirectory() {
     lat: number;
     lng: number;
   } | null>(null);
+  const isInitialMount = useRef(true);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -106,7 +115,9 @@ export function ShopsDirectory() {
         params.append('search', search);
       }
 
-      const response = await fetch(`/api/shops?${params.toString()}`);
+      const response = await fetch(`/api/shops?${params.toString()}`, {
+        cache: 'no-store', // Always fetch fresh data to avoid stale cache
+      });
       const data = await response.json();
 
       if (response.ok) {
@@ -121,6 +132,12 @@ export function ShopsDirectory() {
   };
 
   useEffect(() => {
+    // Skip initial fetch if we have initial data
+    if (isInitialMount.current && initialShops.length > 0) {
+      isInitialMount.current = false;
+      return;
+    }
+    isInitialMount.current = false;
     fetchShops();
   }, [city, offset]);
 
@@ -321,7 +338,7 @@ export function ShopsDirectory() {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4">
-                {loading ? (
+                {loading && sortedShops.length === 0 ? (
                   <div className="space-y-4">
                     {[...Array(5)].map((_, i) => (
                       <Card key={i} className="animate-pulse">
@@ -341,7 +358,7 @@ export function ShopsDirectory() {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-4" suppressHydrationWarning>
                     {sortedShops.map((shop) => {
                       const distance =
                         userLocation && shop.latitude && shop.longitude
@@ -356,11 +373,12 @@ export function ShopsDirectory() {
                       return (
                         <Card
                           key={shop.id}
-                          className={`cursor-pointer transition-shadow hover:shadow-lg ${
+                          className={`cursor-pointer hover:shadow-lg ${
                             highlightedShopId === shop.id
                               ? 'ring-2 ring-primary'
                               : ''
                           }`}
+                          suppressHydrationWarning
                           onClick={() => {
                             setSelectedShop(shop);
                             setHighlightedShopId(shop.id);

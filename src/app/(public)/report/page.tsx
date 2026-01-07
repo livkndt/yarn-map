@@ -48,7 +48,9 @@ export default function ReportPage() {
             search,
             limit: '10',
           });
-          const response = await fetch(`/api/events?${params.toString()}`);
+          const response = await fetch(`/api/events?${params.toString()}`, {
+            cache: 'no-store', // Always fetch fresh data to avoid stale cache
+          });
           const data = await response.json();
           if (response.ok) {
             setEvents(data.events || []);
@@ -58,7 +60,9 @@ export default function ReportPage() {
             search,
             limit: '10',
           });
-          const response = await fetch(`/api/shops?${params.toString()}`);
+          const response = await fetch(`/api/shops?${params.toString()}`, {
+            cache: 'no-store', // Always fetch fresh data to avoid stale cache
+          });
           const data = await response.json();
           if (response.ok) {
             setShops(data.shops || []);

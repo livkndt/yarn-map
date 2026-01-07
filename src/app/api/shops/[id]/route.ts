@@ -51,10 +51,10 @@ export async function GET(
 
     const response = NextResponse.json(shop);
 
-    // Allow caching for bfcache compatibility
+    // Reduced cache time to ensure fresh data, but still allow bfcache
     response.headers.set(
       'Cache-Control',
-      'public, s-maxage=60, stale-while-revalidate=300',
+      'public, s-maxage=10, stale-while-revalidate=30',
     );
 
     return response;

@@ -66,6 +66,9 @@ export function EventsCalendar() {
 
         const response = await fetch(
           `/api/events?startDate=${startDate}&endDate=${endDate}&limit=1000`,
+          {
+            cache: 'no-store', // Always fetch fresh data to avoid stale cache
+          },
         );
         const data = await response.json();
 

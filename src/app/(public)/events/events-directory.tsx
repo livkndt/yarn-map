@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { Calendar, MapPin, Search, Filter, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -53,16 +53,25 @@ const UK_REGIONS = [
   'London',
 ];
 
-export function EventsDirectory() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
+interface EventsDirectoryProps {
+  initialEvents?: Event[];
+  initialTotal?: number;
+}
+
+export function EventsDirectory({
+  initialEvents = [],
+  initialTotal = 0,
+}: EventsDirectoryProps) {
+  const [events, setEvents] = useState<Event[]>(initialEvents);
+  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(initialTotal);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [reportEntity, setReportEntity] = useState<{
     type: 'Event' | 'Shop';
     id: string;
   } | null>(null);
   const [submissionModalOpen, setSubmissionModalOpen] = useState(false);
+  const isInitialMount = useRef(true);
 
   // Filters
   const [upcoming, setUpcoming] = useState(true);
@@ -91,7 +100,9 @@ export function EventsDirectory() {
         params.append('search', search);
       }
 
-      const response = await fetch(`/api/events?${params.toString()}`);
+      const response = await fetch(`/api/events?${params.toString()}`, {
+        cache: 'no-store', // Always fetch fresh data to avoid stale cache
+      });
       const data = await response.json();
 
       if (response.ok) {
@@ -105,7 +116,16 @@ export function EventsDirectory() {
     }
   };
 
+  // Memoize the events display to prevent unnecessary re-renders
+  const displayEvents = useMemo(() => events, [events]);
+
   useEffect(() => {
+    // Skip initial fetch if we have initial data
+    if (isInitialMount.current && initialEvents.length > 0) {
+      isInitialMount.current = false;
+      return;
+    }
+    isInitialMount.current = false;
     fetchEvents();
   }, [upcoming, location, offset]);
 
@@ -224,7 +244,7 @@ export function EventsDirectory() {
       </Card>
 
       {/* Events Grid */}
-      {loading ? (
+      {loading && events.length === 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -238,7 +258,7 @@ export function EventsDirectory() {
             </Card>
           ))}
         </div>
-      ) : events.length === 0 ? (
+      ) : displayEvents.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -251,13 +271,17 @@ export function EventsDirectory() {
       ) : (
         <>
           <div className="mb-4 text-sm text-muted-foreground">
-            Showing {events.length} of {total} events
+            Showing {displayEvents.length} of {total} events
           </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => (
+          <div
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+            suppressHydrationWarning
+          >
+            {displayEvents.map((event) => (
               <Card
                 key={event.id}
-                className="cursor-pointer transition-shadow hover:shadow-lg"
+                className="cursor-pointer hover:shadow-lg"
+                suppressHydrationWarning
                 onClick={() => setSelectedEvent(event)}
               >
                 <CardHeader>

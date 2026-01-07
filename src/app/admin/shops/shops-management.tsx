@@ -18,7 +18,9 @@ export function ShopsManagement() {
   const fetchShops = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/shops?limit=1000');
+      const response = await fetch('/api/shops?limit=1000', {
+        cache: 'no-store', // Always fetch fresh data to avoid stale cache
+      });
       const data = await response.json();
 
       if (response.ok) {
