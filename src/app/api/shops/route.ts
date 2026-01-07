@@ -86,29 +86,13 @@ export async function GET(request: NextRequest) {
       offset,
     });
 
-    // Disable CDN caching for filtered queries to prevent stale data issues
-    // This is critical for production where CDN caching can serve wrong responses
-    const hasFilters = city || region || search;
-
-    if (hasFilters) {
-      // No caching for filtered queries - prevents CDN from serving stale filtered results
-      // This ensures users always get the correct filtered data, especially after changing filters
-      response.headers.set(
-        'Cache-Control',
-        'no-store, no-cache, must-revalidate',
-      );
-      response.headers.set('Pragma', 'no-cache');
-      response.headers.set('Expires', '0');
-      // Vary header helps but CDN caching is disabled above for safety
-      response.headers.set('Vary', 'Accept, Accept-Encoding');
-    } else {
-      // Light caching for unfiltered default queries
-      response.headers.set(
-        'Cache-Control',
-        'public, s-maxage=10, stale-while-revalidate=30',
-      );
-      response.headers.set('Vary', 'Accept, Accept-Encoding');
-    }
+    // Disable all caching for now - we can add it back later when needed
+    response.headers.set(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate',
+    );
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
 
     return response;
   } catch (error) {
