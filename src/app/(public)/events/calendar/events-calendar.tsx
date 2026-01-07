@@ -21,9 +21,24 @@ import {
   startOfWeek,
   endOfWeek,
 } from 'date-fns';
-import { EventDetailModal } from '../event-detail-modal';
-import { ReportModal } from '@/components/report-modal';
+import dynamic from 'next/dynamic';
 import type { Event } from '@/types';
+
+const EventDetailModal = dynamic(
+  () =>
+    import('../event-detail-modal').then((mod) => ({
+      default: mod.EventDetailModal,
+    })),
+  { ssr: false },
+);
+
+const ReportModal = dynamic(
+  () =>
+    import('@/components/report-modal').then((mod) => ({
+      default: mod.ReportModal,
+    })),
+  { ssr: false },
+);
 
 export function EventsCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());

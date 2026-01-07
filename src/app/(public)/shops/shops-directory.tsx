@@ -27,9 +27,31 @@ const ShopsMap = dynamic(
     ),
   },
 );
-import { ShopDetailModal } from './shop-detail-modal';
-import { ReportModal } from '@/components/report-modal';
-import { SubmissionModal } from '@/components/submission-modal';
+
+const ShopDetailModal = dynamic(
+  () =>
+    import('./shop-detail-modal').then((mod) => ({
+      default: mod.ShopDetailModal,
+    })),
+  { ssr: false },
+);
+
+const ReportModal = dynamic(
+  () =>
+    import('@/components/report-modal').then((mod) => ({
+      default: mod.ReportModal,
+    })),
+  { ssr: false },
+);
+
+const SubmissionModal = dynamic(
+  () =>
+    import('@/components/submission-modal').then((mod) => ({
+      default: mod.SubmissionModal,
+    })),
+  { ssr: false },
+);
+
 import { Plus } from 'lucide-react';
 
 const UK_REGIONS = [

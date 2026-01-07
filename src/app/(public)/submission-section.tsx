@@ -1,9 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Plus } from 'lucide-react';
-import { SubmissionModal } from '@/components/submission-modal';
+
+const SubmissionModal = dynamic(
+  () =>
+    import('@/components/submission-modal').then((mod) => ({
+      default: mod.SubmissionModal,
+    })),
+  {
+    ssr: false,
+  },
+);
 
 export function SubmissionSection() {
   const [submissionModalOpen, setSubmissionModalOpen] = useState(false);

@@ -14,10 +14,32 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { format, parseISO } from 'date-fns';
-import { EventDetailModal } from './event-detail-modal';
-import { ReportModal } from '@/components/report-modal';
-import { SubmissionModal } from '@/components/submission-modal';
+import dynamic from 'next/dynamic';
 import { Plus } from 'lucide-react';
+
+const EventDetailModal = dynamic(
+  () =>
+    import('./event-detail-modal').then((mod) => ({
+      default: mod.EventDetailModal,
+    })),
+  { ssr: false },
+);
+
+const ReportModal = dynamic(
+  () =>
+    import('@/components/report-modal').then((mod) => ({
+      default: mod.ReportModal,
+    })),
+  { ssr: false },
+);
+
+const SubmissionModal = dynamic(
+  () =>
+    import('@/components/submission-modal').then((mod) => ({
+      default: mod.SubmissionModal,
+    })),
+  { ssr: false },
+);
 import type { Event } from '@/types';
 
 const UK_REGIONS = [

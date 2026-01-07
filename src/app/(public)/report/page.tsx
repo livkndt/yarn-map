@@ -11,8 +11,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ReportModal } from '@/components/report-modal';
+import dynamic from 'next/dynamic';
 import type { Event, Shop } from '@/types';
+
+const ReportModal = dynamic(
+  () =>
+    import('@/components/report-modal').then((mod) => ({
+      default: mod.ReportModal,
+    })),
+  { ssr: false },
+);
 
 export default function ReportPage() {
   const [entityType, setEntityType] = useState<'Event' | 'Shop'>('Shop');
