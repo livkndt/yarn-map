@@ -20,6 +20,7 @@ export interface Event {
   endDate: string | null;
   location: string;
   address: string;
+  region: string | null;
   latitude: number | null;
   longitude: number | null;
   website: string | null;

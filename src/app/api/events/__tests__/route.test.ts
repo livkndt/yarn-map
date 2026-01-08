@@ -217,6 +217,79 @@ describe('Events API Route', () => {
       expect(data.name).toBe('New Event');
     });
 
+    it('should create event with region field', async () => {
+      (mockAuth as jest.Mock).mockResolvedValue({ user: { id: 'admin' } });
+      const mockEvent = {
+        id: '1',
+        name: 'New Event',
+        startDate: new Date('2026-01-01'),
+        location: 'London',
+        address: '123 Street',
+        region: 'London',
+      };
+
+      (mockDb.event.create as jest.Mock).mockResolvedValue(mockEvent);
+
+      const request = new NextRequest('http://localhost/api/events', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'New Event',
+          startDate: '2026-01-01T00:00:00Z',
+          location: 'London',
+          address: '123 Street',
+          region: 'London',
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(201);
+      expect(data.name).toBe('New Event');
+      expect(mockDb.event.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            region: 'London',
+          }),
+        }),
+      );
+    });
+
+    it('should create event with null region when region is not provided', async () => {
+      (mockAuth as jest.Mock).mockResolvedValue({ user: { id: 'admin' } });
+      const mockEvent = {
+        id: '1',
+        name: 'New Event',
+        startDate: new Date('2026-01-01'),
+        location: 'London',
+        address: '123 Street',
+        region: null,
+      };
+
+      (mockDb.event.create as jest.Mock).mockResolvedValue(mockEvent);
+
+      const request = new NextRequest('http://localhost/api/events', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'New Event',
+          startDate: '2026-01-01T00:00:00Z',
+          location: 'London',
+          address: '123 Street',
+        }),
+      });
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(201);
+      expect(mockDb.event.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            region: null,
+          }),
+        }),
+      );
+    });
+
     it('should reject unauthenticated requests', async () => {
       (mockAuth as jest.Mock).mockResolvedValue(null);
 

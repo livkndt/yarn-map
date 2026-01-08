@@ -16,7 +16,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { Event } from '@/types';
+
+const UK_REGIONS = [
+  'London',
+  'Scotland',
+  'Northern Ireland',
+  'Wales',
+  'North',
+  'Midlands',
+  'South',
+];
 
 const eventSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -25,6 +42,7 @@ const eventSchema = z.object({
   endDate: z.string().optional(),
   location: z.string().min(1, 'Location is required'),
   address: z.string().min(1, 'Address is required'),
+  region: z.string().optional().nullable(),
   latitude: z.string().optional(),
   longitude: z.string().optional(),
   website: z.string().url().optional().or(z.literal('')),
@@ -48,6 +66,8 @@ export function EventFormModal({ event, open, onClose }: EventFormModalProps) {
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -57,12 +77,15 @@ export function EventFormModal({ event, open, onClose }: EventFormModalProps) {
       endDate: '',
       location: '',
       address: '',
+      region: '',
       latitude: '',
       longitude: '',
       website: '',
       source: '',
     },
   });
+
+  const selectedRegion = watch('region');
 
   useEffect(() => {
     if (event) {
@@ -83,6 +106,7 @@ export function EventFormModal({ event, open, onClose }: EventFormModalProps) {
         endDate: event.endDate ? formatDateTime(event.endDate) : '',
         location: event.location,
         address: event.address,
+        region: event.region || '',
         latitude: event.latitude?.toString() || '',
         longitude: event.longitude?.toString() || '',
         website: event.website || '',
@@ -103,6 +127,7 @@ export function EventFormModal({ event, open, onClose }: EventFormModalProps) {
         endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
         location: data.location,
         address: data.address,
+        region: data.region || null,
         latitude: data.latitude ? parseFloat(data.latitude) : null,
         longitude: data.longitude ? parseFloat(data.longitude) : null,
         website: data.website || null,
@@ -225,6 +250,41 @@ export function EventFormModal({ event, open, onClose }: EventFormModalProps) {
             {errors.address && (
               <p className="text-sm text-destructive">
                 {errors.address.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="region">Region</Label>
+            <Select
+              value={selectedRegion || undefined}
+              onValueChange={(value) => setValue('region', value || null)}
+            >
+              <SelectTrigger id="region">
+                <SelectValue placeholder="Select a region (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {UK_REGIONS.map((region) => (
+                  <SelectItem key={region} value={region}>
+                    {region}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedRegion && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setValue('region', null)}
+                className="h-8 text-xs"
+              >
+                Clear region
+              </Button>
+            )}
+            {errors.region && (
+              <p className="text-sm text-destructive">
+                {errors.region.message}
               </p>
             )}
           </div>

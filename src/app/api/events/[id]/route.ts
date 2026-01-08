@@ -13,6 +13,7 @@ const updateEventSchema = z.object({
   endDate: z.string().datetime().optional().nullable(),
   location: z.string().min(1).optional(),
   address: z.string().min(1).optional(),
+  region: z.string().optional().nullable(),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),
   website: z.string().url().optional().nullable().or(z.literal('')),
@@ -103,6 +104,7 @@ export async function PATCH(
       updateData.endDate = data.endDate ? new Date(data.endDate) : null;
     if (data.location !== undefined) updateData.location = data.location;
     if (data.address !== undefined) updateData.address = data.address;
+    if (data.region !== undefined) updateData.region = data.region || null;
     if (data.latitude !== undefined) updateData.latitude = data.latitude;
     if (data.longitude !== undefined) updateData.longitude = data.longitude;
     if (data.website !== undefined) updateData.website = data.website || null;

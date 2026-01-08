@@ -21,6 +21,7 @@ const createEventSchema = z.object({
     .nullable(),
   location: z.string().min(1, 'Location is required'),
   address: z.string().min(1, 'Address is required'),
+  region: z.string().optional().nullable(),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),
   website: z
@@ -249,6 +250,7 @@ export async function POST(request: NextRequest) {
         endDate: data.endDate ? new Date(data.endDate) : null,
         location: data.location,
         address: data.address,
+        region: data.region || null,
         latitude: data.latitude,
         longitude: data.longitude,
         website: data.website || null,

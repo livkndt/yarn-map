@@ -42,6 +42,7 @@ async function getInitialEvents(): Promise<{ events: Event[]; total: number }> {
         endDate: event.endDate?.toISOString() ?? null,
         location: event.location,
         address: event.address,
+        region: event.region,
         latitude: event.latitude,
         longitude: event.longitude,
         website: event.website,

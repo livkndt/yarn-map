@@ -186,6 +186,74 @@ describe('Events API Route [id]', () => {
       expect(response.status).toBe(401);
       expect(data.error).toBe('Unauthorized');
     });
+
+    it('should update event region field', async () => {
+      (mockAuth as jest.Mock).mockResolvedValue({ user: { id: 'admin' } });
+      const mockEvent = {
+        id: '1',
+        name: 'Test Event',
+        startDate: new Date('2026-01-01'),
+        location: 'London',
+        region: 'Scotland',
+      };
+
+      (mockDb.event.update as jest.Mock).mockResolvedValue(mockEvent);
+
+      const request = new NextRequest('http://localhost/api/events/1', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          region: 'Scotland',
+        }),
+      });
+
+      const response = await PATCH(request, {
+        params: Promise.resolve({ id: '1' }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(mockDb.event.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: '1' },
+          data: expect.objectContaining({
+            region: 'Scotland',
+          }),
+        }),
+      );
+    });
+
+    it('should update event region to null', async () => {
+      (mockAuth as jest.Mock).mockResolvedValue({ user: { id: 'admin' } });
+      const mockEvent = {
+        id: '1',
+        name: 'Test Event',
+        startDate: new Date('2026-01-01'),
+        location: 'London',
+        region: null,
+      };
+
+      (mockDb.event.update as jest.Mock).mockResolvedValue(mockEvent);
+
+      const request = new NextRequest('http://localhost/api/events/1', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          region: null,
+        }),
+      });
+
+      const response = await PATCH(request, {
+        params: Promise.resolve({ id: '1' }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(mockDb.event.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: '1' },
+          data: expect.objectContaining({
+            region: null,
+          }),
+        }),
+      );
+    });
   });
 
   describe('DELETE /api/events/[id]', () => {
