@@ -9,7 +9,9 @@ export const metadata: Metadata = {
     'Discover independent yarn shops across the UK with locations, contact information, and specialties.',
 };
 
-export const revalidate = 3600; // Revalidate every hour
+// Disable static generation - always fetch fresh data
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 async function getInitialShops(): Promise<{ shops: Shop[]; total: number }> {
   try {
