@@ -43,6 +43,15 @@ export function Nav() {
             >
               Shops
             </Link>
+            <Link
+              href="/about"
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-primary',
+                isActive('/about') ? 'text-primary' : 'text-foreground',
+              )}
+            >
+              About
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -88,6 +97,18 @@ export function Nav() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Shops
+              </Link>
+              <Link
+                href="/about"
+                className={cn(
+                  'block rounded-lg px-3 py-2 text-base font-medium transition-colors hover:bg-accent',
+                  isActive('/about')
+                    ? 'bg-accent text-primary'
+                    : 'text-foreground',
+                )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                About
               </Link>
             </div>
           </div>

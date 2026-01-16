@@ -28,15 +28,18 @@ describe('Nav component', () => {
     render(<Nav />);
     expect(screen.getByRole('link', { name: /events/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /shops/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /about/i })).toBeInTheDocument();
   });
 
   it('should have correct hrefs for navigation links', () => {
     render(<Nav />);
     const eventsLink = screen.getByRole('link', { name: /events/i });
     const shopsLink = screen.getByRole('link', { name: /shops/i });
+    const aboutLink = screen.getByRole('link', { name: /about/i });
 
     expect(eventsLink).toHaveAttribute('href', '/events');
     expect(shopsLink).toHaveAttribute('href', '/shops');
+    expect(aboutLink).toHaveAttribute('href', '/about');
   });
 
   it('should render mobile menu button', () => {

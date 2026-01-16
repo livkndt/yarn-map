@@ -45,6 +45,7 @@ describe('Footer component', () => {
   it('should render Support section with Report an Issue link', () => {
     render(<Footer />);
     expect(screen.getByText('Support')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /about/i })).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: /report an issue/i }),
     ).toBeInTheDocument();
@@ -54,10 +55,12 @@ describe('Footer component', () => {
     render(<Footer />);
     const eventsLink = screen.getByRole('link', { name: /events/i });
     const shopsLink = screen.getByRole('link', { name: /shops/i });
+    const aboutLink = screen.getByRole('link', { name: /about/i });
     const reportLink = screen.getByRole('link', { name: /report an issue/i });
 
     expect(eventsLink).toHaveAttribute('href', '/events');
     expect(shopsLink).toHaveAttribute('href', '/shops');
+    expect(aboutLink).toHaveAttribute('href', '/about');
     expect(reportLink).toHaveAttribute('href', '/report');
   });
 
