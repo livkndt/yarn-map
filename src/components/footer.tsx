@@ -53,6 +53,14 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/terms"
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Terms &amp; Conditions
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/report"
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
