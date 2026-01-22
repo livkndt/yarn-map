@@ -5,11 +5,17 @@ import { db } from './db';
 import { logger } from './logger';
 import { logAudit } from './audit';
 
+const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
   trustHost: true, // Required for production deployments on Netlify/Vercel
   session: {
     strategy: 'jwt',
+    maxAge: SESSION_MAX_AGE_SECONDS,
+  },
+  jwt: {
+    maxAge: SESSION_MAX_AGE_SECONDS,
   },
   pages: {
     signIn: '/admin',
