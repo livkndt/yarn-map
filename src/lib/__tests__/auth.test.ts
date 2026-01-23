@@ -25,6 +25,15 @@ jest.mock('@/lib/db', () => ({
   db: {},
 }));
 
+jest.mock('@/lib/ratelimit', () => ({
+  checkRateLimit: jest.fn().mockResolvedValue({
+    success: true,
+    remaining: 1,
+    reset: Date.now() + 3600000,
+    limit: 5,
+  }),
+}));
+
 import { auth, signIn, signOut, handlers } from '../auth';
 
 describe('Auth configuration', () => {

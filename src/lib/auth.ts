@@ -4,6 +4,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { db } from './db';
 import { logger } from './logger';
 import { logAudit } from './audit';
+import { checkRateLimit } from './ratelimit';
 
 const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 
@@ -26,13 +27,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
         const email = String(credentials.email);
         const password = String(credentials.password);
+        const forwarded = request?.headers?.get('x-forwarded-for');
+        const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
+        const identifier = `auth:login:${ip}:${email.toLowerCase().trim()}`;
+        const rateLimit = await checkRateLimit(identifier, 'strict');
+
+        if (!rateLimit.success) {
+          logger.warn('Admin login rate limited', { email, ip });
+          await logAudit({
+            action: 'auth.login_rate_limited',
+            metadata: { email },
+            ipAddress: ip,
+          });
+          return null;
+        }
 
         const adminEmail = process.env.ADMIN_EMAIL;
         const adminPassword = process.env.ADMIN_PASSWORD;
